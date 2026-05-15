@@ -1,2 +1,2 @@
 # Offensive-Security
-Personal Offensiive Security learning journey
+Personal Offensive Security learning journey
