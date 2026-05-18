@@ -2,7 +2,7 @@
 
 https://overthewire.org/wargames/bandit/ strips everything back to the command line and forces you to actually think about what you're doing. No GUIs, no hand-holding, just you and a terminal.
 
-The game works by chaining levels together - each level hides a password that unlocks the next. Along the way, you'll pick up essential Linux skills, get comfortable with SSH.
+The game works by chaining levels together - each level hides a password that unlocks the next. Along the way, you'll pick up essential Linux skills and get comfortable with SSH.
 
 This walkthrough documents my process and progress as I work through each level.
 
@@ -10,3 +10,131 @@ If you're working through Bandit yourself, try solving each level independently 
 
 ## Levels
 # Solutions will be added progressively as levels are completed.
+
+**Level 0 - Login using SSH**
+
+Server: bandit.labs.overthewire.org
+port: 2220
+Username: bandit0
+Password: bandit0
+
+Solution: Using a Linux terminal, SSH into the machine. The command structure of SSH is ssh <username>@<server> -p <port>
+Username should be the username mentioned, server should be a valid URL or a correct IP address, and -p <port> won't be necessary if we connect to port 22 (standard port).
+
+ssh bandit0@bandit.labs.overthewire.org -p 2220
+password: bandit0 (already given)
+
+By now, you should be logged into the machine.
+
+**Level 0 - Level 1: The password for the next level is stored in a file called readme located in the home directory. Use this password to log into bandit1 using SSH. Whenever you find a password for a level, use SSH (on port 2220) to log into that level and continue the game.**
+Once logged into the remote machine
+
+bandit0@bandit:~$ pwd
+/home/bandit0
+bandit0@bandit:~$ ls
+readme
+bandit0@bandit:~$ cat readme
+ZjLjTmM6FvvyRnrb2rfNWOZOTa6ip5If
+
+# pwd is used for viewing the current working directory, ls lists the files in the current folder, cat prints the file's contents to the console.
+==============================================================================================================================================================================================================================================================================================================================================
+
+**Level 1 - Level 2: The password for the next level is stored in a file called - located in the home directory**
+
+bandit0@bandit:~$ exit
+logout
+Connection to bandit.labs.overthewirw.org closed
+
+Now that you have got the password for Level 1, use it to ssh into the remote machine
+ssh bandit1@bandit.labs.overthewire.org -p 2220
+password: ZjLjTmM6FvvyRnrb2rfNWOZOTa6ip5If
+
+bandit1@bandit:~$ pwd
+/home/bandit1
+bandit1@bandit:~$ ls
+-
+bandit1@bandit:~$ cat ./-
+263JGJPfgU6LtdEvgfWU1XP5yac29mFx
+
+Using the command cat - does not return anything because - is a special character in Linux. Most commands interpret - as "read from standard input (Keyboard)" rather than a file name, so if you type cat -, it won't look for a file — it'll just sit and wait for you to type something. By adding ./; you're explicitly telling the shell:
+
+"This is a file path, not a flag or special input — look for a file literally named - right here."
+=================================================================================================================================================================================================================================================================================================================================================
+
+**Level 2 - Level 3: The password for the next level is stored in a file called --spaces in this filename-- located in the home directory**
+
+ssh bandit2@bandit.labs.overthewire.org -p 2220
+password: 263JGJPfgU6LtdEvgfWU1XP5yac29mFx
+
+bandit2@bandit:~$ pwd
+/home/bandit2
+bandit2@bandit:~$ ls
+--spaces in this filename--
+bandit2@bandit:~$ cat './--spaces in this filename--'
+MNk8KNH3Usiio41PRUEoDFPqfxLPlSmx
+
+The filename `--spaces in this filename--` has two problems: spaces, which the shell treats as separators, and leading `--`, which the shell interprets as a flag rather than a filename. Prefixing with `./` forces the shell to treat it as a file path, and wrapping in quotes handles the spaces, giving us `cat './--spaces in this filename--'`.
+======================================================================================================================================================================================================================================================================================================================================================
+
+**Level 3 - Level 4: The password for the next level is stored in a hidden file in the inhere directory.**
+
+ssh bandit3@bandit.labs.overthewire.org -p 2220
+password: MNk8KNH3Usiio41PRUEoDFPqfxLPlSmx
+
+bandit3@bandit:~$ ls
+inhere
+bandit3@bandit:~$ cd inhere
+bandit3@bandit:~/inhere$ ls -la
+total 12
+drwxr-xr-x 2 root    root    4096 Apr  3 15:18 .
+drwxr-xr-x 3 root    root    4096 Apr  3 15:18 ..
+-rw-r----- 1 bandit4 bandit3   33 Apr  3 15:18 ...Hiding-From-You
+bandit3@bandit:~/inhere$ cat '...Hiding-From-You'
+2WmrDFRmJIq3IPxneAaMGhap0pFhF3NJ
+
+The password file was hidden inside a subdirectory called `inhere`. Running `ls` only shows visible files, so `ls -la` was needed to reveal the hidden file `...Hiding-From-You` (files prefixed with `.` are hidden in Linux). The file was then read with `cat '... Hiding-From-You'`, using quotes to handle the dots and spaces in the filename.
+=====================================================================================================================================================================================================================================================================================================================================================
+
+**Level 4 - Level 5: The password for the next level is stored in the only human-readable file in the inhere directory. Tip: if your terminal is messed up, try the “reset” command.**
+
+ssh bandit4@bandit.labs.overthewire.org
+password: 2WmrDFRmJIq3IPxneAaMGhap0pFhF3NJ
+
+bandit4@bandit:~$ ls
+inhere
+bandit4@bandit:~$ cd inhere
+bandit4@bandit:~/inhere$ ls
+-file00  -file01  -file02  -file03  -file04  -file05  -file06  -file07  -file08  -file09
+bandit4@bandit:~/inhere$ ls -la
+total 48
+drwxr-xr-x 2 root    root    4096 Apr  3 15:18 .
+drwxr-xr-x 3 root    root    4096 Apr  3 15:18 ..
+-rw-r----- 1 bandit5 bandit4   33 Apr  3 15:18 -file00
+-rw-r----- 1 bandit5 bandit4   33 Apr  3 15:18 -file01
+-rw-r----- 1 bandit5 bandit4   33 Apr  3 15:18 -file02
+-rw-r----- 1 bandit5 bandit4   33 Apr  3 15:18 -file03
+-rw-r----- 1 bandit5 bandit4   33 Apr  3 15:18 -file04
+-rw-r----- 1 bandit5 bandit4   33 Apr  3 15:18 -file05
+-rw-r----- 1 bandit5 bandit4   33 Apr  3 15:18 -file06
+-rw-r----- 1 bandit5 bandit4   33 Apr  3 15:18 -file07
+-rw-r----- 1 bandit5 bandit4   33 Apr  3 15:18 -file08
+-rw-r----- 1 bandit5 bandit4   33 Apr  3 15:18 -file09
+bandit4@bandit:~/inhere$ file ./*
+./-file00: data
+./-file01: data
+./-file02: data
+./-file03: DOS executable (COM), start instruction 0x8c887e10 c3ee96c9
+./-file04: data
+./-file05: data
+./-file06: data
+./-file07: ASCII text
+./-file08: data
+./-file09: data
+bandit4@bandit:~/inhere$ cat ./file07
+cat: ./file07: No such file or directory
+bandit4@bandit:~/inhere$ cat ./-file07
+4oQYVPkxZOOEOO5pTW81FB8j8lxXGUQw
+
+Inside the `inhere` directory there are 10 files named `-file00` to `-file09`. The `file` command is used to determine the type of data a file contains (e.g. `ASCII text`, `data`, `ELF binary`) without needing to open it — useful when you don't know what a file holds. Since the filenames start with `-`, we use the `./` prefix to prevent the shell from misinterpreting them as flags. Rather than `cat`-ing each file one by one, we combine `file` with a wildcard `*` — running `file ./*` checks the data type of all files at once. Nine of them return `data` (binary, not human-readable) but `-file07` returns `ASCII text`, which is human-readable. We then read it with `cat ./-file07` to get the password.
+The most common data encodings that are human-readable are ASCII and Unicode.
+===================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
