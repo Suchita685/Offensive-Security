@@ -1,0 +1,12 @@
+## INTRODUCTION
+
+https://overthewire.org/wargames/bandit/ strips everything back to the command line and forces you to actually think about what you're doing. No GUIs, no hand-holding, just you and a terminal.
+
+The game works by chaining levels together - each level hides a password that unlocks the next. Along the way, you'll pick up essential Linux skills, get comfortable with SSH.
+
+This walkthrough documents my process and progress as I work through each level.
+
+If you're working through Bandit yourself, try solving each level independently before reading the solution.
+
+## Levels
+# Solutions will be added progressively as levels are completed.
