@@ -136,6 +136,213 @@ cat: ./file07: No such file or directory
 bandit4@bandit:~/inhere$ cat ./-file07
 4oQYVPkxZOOEOO5pTW81FB8j8lxXGUQw
 
-Inside the `inhere` directory there are 10 files named `-file00` to `-file09`. The `file` command is used to determine the type of data a file contains (e.g. `ASCII text`, `data`, `ELF binary`) without needing to open it — useful when you don't know what a file holds. Since the filenames start with `-`, we use the `./` prefix to prevent the shell from misinterpreting them as flags. Rather than `cat`-ing each file one by one, we combine `file` with a wildcard `*` — running `file ./*` checks the data type of all files at once. Nine of them return `data` (binary, not human-readable) but `-file07` returns `ASCII text`, which is human-readable. We then read it with `cat ./-file07` to get the password.
+Inside the `inhere` directory, there are 10 files named `-file00` to `-file09`. The `file` command is used to determine the type of data a file contains (e.g. `ASCII text`, `data`, `ELF binary`) without needing to open it — useful when you don't know what a file holds. Since the filenames start with `-`, we use the `./` prefix to prevent the shell from misinterpreting them as flags. Rather than `cat`-ing each file one by one, we combine `file` with a wildcard `*` — running `file ./*` checks the data type of all files at once. Nine of them return `data` (binary, not human-readable) but `-file07` returns `ASCII text`, which is human-readable. We then read it with `cat ./-file07` to get the password.
 The most common data encodings that are human-readable are ASCII and Unicode.
 ===================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+
+**Level 5 - Level 6: The password for the next level is stored in a file somewhere under the inhere directory and has all of the following properties**
+human-readable
+1033 bytes in size
+not executable
+
+ssh bandit5@bandit.labs.overthewire.org -p 2220
+password: 4oQYVPkxZOOEOO5pTW81FB8j8lxXGUQw
+
+bandit5@bandit:~/inhere$ ls
+maybehere00  maybehere03  maybehere06  maybehere09  maybehere12  maybehere15  maybehere18
+maybehere01  maybehere04  maybehere07  maybehere10  maybehere13  maybehere16  maybehere19
+maybehere02  maybehere05  maybehere08  maybehere11  maybehere14  maybehere17
+bandit5@bandit:~/inhere$ ls -la
+total 88
+drwxr-x--- 22 root bandit5 4096 Apr  3 15:18 .
+drwxr-xr-x  3 root root    4096 Apr  3 15:18 ..
+drwxr-x---  2 root bandit5 4096 Apr  3 15:18 maybehere00
+drwxr-x---  2 root bandit5 4096 Apr  3 15:18 maybehere01
+drwxr-x---  2 root bandit5 4096 Apr  3 15:18 maybehere02
+drwxr-x---  2 root bandit5 4096 Apr  3 15:18 maybehere03
+drwxr-x---  2 root bandit5 4096 Apr  3 15:18 maybehere04
+drwxr-x---  2 root bandit5 4096 Apr  3 15:18 maybehere05
+drwxr-x---  2 root bandit5 4096 Apr  3 15:18 maybehere06
+drwxr-x---  2 root bandit5 4096 Apr  3 15:18 maybehere07
+drwxr-x---  2 root bandit5 4096 Apr  3 15:18 maybehere08
+drwxr-x---  2 root bandit5 4096 Apr  3 15:18 maybehere09
+drwxr-x---  2 root bandit5 4096 Apr  3 15:18 maybehere10
+drwxr-x---  2 root bandit5 4096 Apr  3 15:18 maybehere11
+drwxr-x---  2 root bandit5 4096 Apr  3 15:18 maybehere12
+drwxr-x---  2 root bandit5 4096 Apr  3 15:18 maybehere13
+drwxr-x---  2 root bandit5 4096 Apr  3 15:18 maybehere14
+drwxr-x---  2 root bandit5 4096 Apr  3 15:18 maybehere15
+drwxr-x---  2 root bandit5 4096 Apr  3 15:18 maybehere16
+drwxr-x---  2 root bandit5 4096 Apr  3 15:18 maybehere17
+drwxr-x---  2 root bandit5 4096 Apr  3 15:18 maybehere18
+drwxr-x---  2 root bandit5 4096 Apr  3 15:18 maybehere19
+bandit5@bandit:~/inhere$ file ./*
+./maybehere00: directory
+./maybehere01: directory
+./maybehere02: directory
+./maybehere03: directory
+./maybehere04: directory
+./maybehere05: directory
+./maybehere06: directory
+./maybehere07: directory
+./maybehere08: directory
+./maybehere09: directory
+./maybehere10: directory
+./maybehere11: directory
+./maybehere12: directory
+./maybehere13: directory
+./maybehere14: directory
+./maybehere15: directory
+./maybehere16: directory
+./maybehere17: directory
+./maybehere18: directory
+./maybehere19: directory
+bandit5@bandit:~/inhere$ find . -type f -size 1033c ! -executable
+./maybehere07/.file2
+bandit5@bandit:~/inhere$ cat ./maybehere07/.file2
+HWasnPhtq9AVKe0dmk45nxy20cvUa6EG
+
+The `inhere` directory contains 20 subdirectories, each with multiple files; searching manually would take forever. Instead, we use the `find` command to filter by all three properties at once: human-readable, 1033 bytes in size, and not executable. Running `find . -type f -size 1033c ! -executable` narrows it down to a single file `./inhere/maybehere07/.file2`, which we then read with `cat` to get the password.
+
+`find` searches for files in a directory hierarchy based on conditions you specify.
+Basic syntax: `find <where> <what>`
+
+Key flags:
+| Flag | Description |
+|------|-------------|
+| `-type f` | Search for files only (use `-type d` for directories) |
+| `-name` | Search by filename e.g. `-name "*.txt"` |
+| `-size` | Search by size e.g. `-size 1033c` (c=bytes, k=kilobytes, M=megabytes) |
+| `! -executable` | Exclude executable files (`!` means NOT) |
+| `-user` | Search by owner e.g. `-user bandit7` |
+| `-group` | Search by group e.g. `-group bandit6` |
+| `-readable` | Only human-readable files |
+| `2>/dev/null` | Suppresses "Permission denied" errors from the output |
+===========================================================================================================================================================================================================================================================================================================================================================================================================================================
+
+**Level 6 - Level 7: The password for the next level is stored somewhere on the server and has all of the following properties**
+owned by user bandit7
+owned by group bandit6
+33 bytes in size
+
+ssh bandit6@bandit.labs.overthewire.org -p 2220
+password: HWasnPhtq9AVKe0dmk45nxy20cvUa6EG
+
+bandit6@bandit:~$ ls
+bandit6@bandit:~$ ls -la
+total 20
+drwxr-xr-x   2 root root 4096 Apr  3 15:17 .
+drwxr-xr-x 150 root root 4096 Apr  3 15:20 ..
+-rw-r--r--   1 root root  220 Mar 31  2024 .bash_logout
+-rw-r--r--   1 root root 3851 Apr  3 15:10 .bashrc
+-rw-r--r--   1 root root  807 Mar 31  2024 .profile
+bandit6@bandit:~$ find . -user bandit7 -group bandit6 -size 33c
+bandit6@bandit:~$ find / -user bandit7 -group bandit6 -size 33c 2>/dev/null
+/var/lib/dpkg/info/bandit7.password
+bandit6@bandit:~$ cat /var/lib/dpkg/info/bandit7.password
+morbNTDkSW6jIlUc0ymOdMaLnOlFVAaj
+
+Unlike previous levels, the file is hidden somewhere on the entire server — not just the home directory. Using `.` in the find command only searches the current directory, so we switch to `/` to search from the root of the whole filesystem. Running `find / -user bandit7 -group bandit6 -size 33c 2>/dev/null` filters by the three given properties — owned by user `bandit7`, group `bandit6`, and exactly 33 bytes in size. The `2>/dev/null` suppresses the flood of "Permission denied" errors so the actual result is visible. This points us to `/var/lib/dpkg/info/bandit7.password`, which we read with `cat` to get the password.
+==============================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+
+**Level 7 - Level 8:The password for the next level is stored in the file data.txt next to the word millionth**
+
+  ssh bandit7@bandit.labs.overthewire.org -p 2220
+  password: morbNTDkSW6jIlUc0ymOdMaLnOlFVAaj
+
+bandit7@bandit:~$ ls
+data.txt
+bandit7@bandit:~$ grep "millionth" data.txt
+millionth       dfwvzFQi4mU0wfNbFOe9RoWskMLg7eEc
+
+The file `data.txt` contains thousands of lines of words paired with passwords, making it impossible to search manually. The `grep` command solves this — it searches through a file and returns only the lines that match a given word or pattern. Running `grep "millionth" data.txt` instantly finds the one line containing the word `millionth`, revealing the password right next to it.
+
+`grep` searches for a pattern inside a file or output.
+Basic syntax: `grep <pattern> <file>`
+
+Key flags:
+| Flag | Description |
+|------|-------------|
+| `-i` | Case-insensitive search |
+| `-r` | Search recursively through directories |
+| `-n` | Show line numbers of matches |
+| `-v` | Invert match — show lines that do NOT match |
+| `-c` | Count the number of matching lines |
+| `-l` | Show only filenames that contain the match |
+==========================================================================================================================================================================================================================================================================================================================================================================================================
+
+**Level 8 - Level 9: The password for the next level is stored in the file data.txt and is the only line of text that occurs only once**
+
+ssh bandit8@bandit.labs.overthewire.org -p 2220
+password: dfwvzFQi4mU0wfNbFOe9RoWskMLg7eEc
+
+bandit8@bandit:~$ ls
+data.txt
+bandit8@bandit:~$ sort data.txt | uniq -u
+4CKMh1JI91bUIZZPXDqGanal4xvAg0JM
+
+`data.txt` contains many lines of passwords, most of which are duplicates — the goal is to find the only line that appears once. Using `sort` first groups all identical lines together, then piping into `uniq -u` filters down to only the unique line. Running `sort data.txt | uniq -u` returns the password instantly.
+
+`sort` arranges lines of a file in a specific order.
+Basic syntax: `sort <file>`
+
+| Flag | Description |
+|------|-------------|
+| `-r` | Reverse order (Z to A) |
+| `-n` | Sort numerically instead of alphabetically |
+| `-u` | Sort and remove duplicates in one step |
+| `-k` | Sort by a specific column e.g. `-k2` sorts by second column |
+| `-f` | Case-insensitive sort |
+
+`uniq` filters out or reports repeated lines. Important: it only detects 
+duplicates on **adjacent lines**, which is why `sort` must always be used before it.
+Basic syntax: `uniq <file>`
+
+| Flag | Description |
+|------|-------------|
+| `-u` | Show only lines that appear exactly once |
+| `-d` | Show only duplicate lines |
+| `-c` | Prefix each line with the number of times it appears |
+| `-i` | Case-insensitive comparison |
+====================================================================================================================================================================================================================================================================================================================================================
+
+**Level 9 - Level 10: The password for the next level is stored in the file data.txt in one of the few human-readable strings, preceded by several ‘=’ characters.**
+
+  ssh bandit9@bandit.labs.overthewire.org -p 2220
+  password: 4CKMh1JI91bUIZZPXDqGanal4xvAg0JM
+
+bandit9@bandit:~$ ls
+data.txt
+bandit9@bandit:~$ grep "=" data.txt
+grep: data.txt: binary file matches
+bandit9@bandit:~$ file data.txt
+data.txt: data
+bandit9@bandit:~$ strings data.txt | grep "=="
+ ========== the
+========== password
+========== is
+========== FGUW5ilLVJrxX9kMYMmlN4MgbpfMiqey
+
+Before diving in, it's always good practice to run `file data.txt` to understand what type of file you're dealing with. In this case, it returns `data` meaning it's a binary file, not plain text. This is further confirmed when running `grep "=" data.txt` directly, which throws a "binary file matches" error — grep detects binary content and refuses to print garbled output cleanly.
+
+Since the file is binary, we use the `strings` command first to extract all human-readable text from it, then pipe it into `grep "=="` to filter for lines containing `==`, which hints at the password location. Running `strings data.txt | grep "=="` reveals the password across four lines.
+
+`strings` command extracts all printable/human-readable character sequences from any file, including binary files.
+Basic syntax: `strings <file>`
+
+| Flag | Description |
+|------|-------------|
+| `-n <number>` | Set minimum string length to display e.g. `-n 8` only shows strings of 8+ characters (default is 4) |
+| `-a` | Scan the entire file, not just certain sections |
+| `-o` | Print the offset (position in file) of each string |
+| `-t x` | Print offset in hexadecimal format |
+| `-e` | Specify character encoding e.g. `-e b` for 16-bit big-endian |
+
+`strings` is especially useful in CTFs and malware analysis when inspecting binary files for hidden text, hardcoded passwords, or URLs.
+===============================================================================================================================================================================================================================================================================================================================================================================================================
+
+
+
+
+
+
