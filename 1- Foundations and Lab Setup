@@ -8,3 +8,106 @@ c) Lab Setup
 
 # Notes
 (Updating as I progress)
+
+Offensive Security: Focuses on testing and identifying vulnerabilities within systems, networks, and applications.
+
+Basic Cybersecurity Concepts:
+============================
+1) CIA Triad:
+Confidentiality - Data is accessible only to those who are authorized to view it.
+Integrity - Data is accurate and has not been tampered with or altered.
+Availability - Data and systems are accessible to authorized users when needed.
+
+2) Threat, Vulnerability, Risk:
+Risk - The likelihood of a cyberattack or a harmful event occurring.
+        Risk = Probability * Impact
+Threat - A risk related to a specific cause -> anything that could cause harm to a system or data.
+        eg: A human attacker = threat actor.
+Vulnerability - A weakness or flaw in a system that allows a threat to cause harm.
+
+3) Authentication, Authorization & Non-Repudiation:
+    Authentication - Verifying the identity of users or devices before granting access. It answers the question 'Who are you?'
+    Authorization - Defining what authenticated users are allowed to access or perform. It answers the question 'What can you do?'
+    Non-Repudiation - Actions are logged and attributed. A user cannot deny what they did. It answers the question 'Who did what?'
+
+4) Threats & Vulnerabilities:
+    Malware - Malicious software: Viruses, worms, Trojans, ransomware -> designed to disrupt or gain unauthorized access
+    Phishing/social engineering - Deceptive tactics to manipulate people into revealing confidential information
+    Zero-Day Vulnerability - A software flaw unknown to the vendor, unpatched, making it a prime target for attackers.
+    Insider Threat - Security risks that originate from within an organization -> like employees or contractors.
+
+5) Defense Mechanisms:
+    Firewall - Monitors and filters incoming/outgoing network traffic based on security rules.
+    IDS/IPS - Intrusion Detection/Prevention system monitors network traffic for suspicious activity and can block it.
+    EDR - Endpoint Detection and Response monitors end-user devices for anomalies and provides advanced response capabilities.
+    Antivirus/Anti-Malware - Programs designed to detect and remove malicious software from systems.
+    Encryption - Converts data into an unreadable format -> only those with the correct key can decrypt and read it.
+
+6) Offensive Security Techniques:
+    Penetration testing - Simulated attacks on systems to discover vulnerabilities before real attackers do.
+    Red teaming - Full-scope attack simulation. Includes social engineering and physical penetration tactics.
+    Vulnerability scanning - Automated tools that scan for known vulnerabilities as a preliminary security assessment.
+    Exploitation - Using tools and techniques to gain unauthorized access -> done ethically within controlled environments.
+
+7)  Identity & Access Management (IAM):
+    MFA - Multi Factor Authentication -> requires multiple forms of verification to confirm identity.
+    SSO - Single Sign-On - One set of credentials gives access to multiple applications.
+    RBAC - Role-Based Access Control -> Limits system access based on the user's role in the organization.
+
+8)  Network Security Concepts:
+    VPN - Encrypts internet traffic and masks IP addresses for privacy and secure communication.
+    Network segmentation - Divides a network into smaller segments to improve security and restrict lateral movement.
+    SSL/TLS - Protocols that provide encrypted, secure communication over the internet.
+
+9) Cyber Kill Chain:
+    A model that outlines the stages of a cyberattack - from planning to execution. Helps security teams understand and disrupt attacks at each stage.
+      (1) Reconnaissance => (2) Weaponization => (3) Delivery => (4) Exploitation => (5) Installation => (6) C2 => (7) Actions on Objective.
+
+
+Basic Hardware components:
+========================
+
+CPU - Central Processing Unit: The brain of the computer, responsible for executing all instructions from software.
+RAM - Random Access Memory: Temporary storage that holds data and instructions while the CPU is actively processing tasks. Cleared when the computer powers off.
+Storage - HDD/SSD: Long-term persistent storage for the operating system, software, and user files. SSD is significantly faster than HDD.
+Motherboard - The main circuit board that connects all components and allows them to communicate with each other.
+GPU - Graphics Processing Unit: Handles image and video rendering. Critical for gaming, graphic-intensive tasks, and increasingly for AI/ML workloads.
+NIC - Network Interface Card: Enables wired or wireless network connections. Gives a computer its unique MAC address on a network.
+Input Devices - Keyboard, mouse: how the user interacts with and gives instructions to the computer.
+Output Devices - Monitor, printer, speakers - how the computer delivers results back to the user.
+PSU & Cooling - The power supply unit converts AC to DC power. Cooling systems prevent overheating.
+
+Software Components:
+===================
+OS - Operating System: Core software managing hardware, UI, and software interactions. eg: Windows, macOS, Linux
+Device Drivers - OS <-> Hardware bridge: Allows the OS to communicate with hardware components such as GPU or printer drivers.
+Firmware - Embedded Software: Permanent software embedded into hardware (like BIOS). Manages low-level startup operations.
+Applications - User-facing software: Programs for user tasks - word processors, web browsers, games, security tools
+
+BIOS (Basic Input/Output System):
+=================================
+BIOS is firmware stored on a non-volatile chip on the motherboard. It acts as the bridge between hardware and software - the first thing that runs when a computer powers on.
+
+Hardware initialization - Configures and prepares CPU, RAM, and storage devices at startup.
+POST - Power-On Self-Test: Checks that all essential hardware is functioning before handing off to the OS
+Boot Device Selection - Determines the order to try boot devices - HDD, USB, CD/DVD - to load the OS.
+BIOS Setup Utility - User interface to configure hardware settings - time, boot order, and hardware parameters.
+
+BIOS vs UEFI:
+=============
+Legacy BIOS:
+--------------
+-> Text-based interface only
+-> Operates in 16-bit mode
+-> Max disk size: 2.1 TB
+-> Limited hardware support
+-> Basic error messages via POST
+
+UEFI:
+------
+-> Graphical UI with mouse support
+-> 32-bit or 64-bit mode
+-> Supports drives larger than 2.1 TB
+-> Faster boot times
+-> Secure Boot — blocks bootkit malware
+-> Network capabilities for remote boot
