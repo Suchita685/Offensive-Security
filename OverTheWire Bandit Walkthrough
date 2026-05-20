@@ -341,8 +341,607 @@ Basic syntax: `strings <file>`
 `strings` is especially useful in CTFs and malware analysis when inspecting binary files for hidden text, hardcoded passwords, or URLs.
 ===============================================================================================================================================================================================================================================================================================================================================================================================================
 
+**Level 10 - Level 11: The password for the next level is stored in the file data.txt, which contains base64 encoded data**
+
+   ssh bandit10@bandit.labs.overthewire.org -p 2220 
+   password: FGUW5ilLVJrxX9kMYMmlN4MgbpfMiqey
+
+bandit10@bandit:~$ ls
+data.txt
+bandit10@bandit:~$ base64 data.txt
+VkdobElIQmhjM04zYjNKa0lHbHpJR1IwVWpFM00yWmFTMkl3VWxKelJFWlRSM05uTWxKWGJuQk9W
+bW96Y1ZKeUNnPT0K
+bandit10@bandit:~$ cat data.txt
+VGhlIHBhc3N3b3JkIGlzIGR0UjE3M2ZaS2IwUlJzREZTR3NnMlJXbnBOVmozcVJyCg==
+bandit10@bandit:~$ base64 -d data.txt
+The password is dtR173fZKb0RRsDFSGsg2RWnpNVj3qRr
+
+Running `cat data.txt` reveals the file contains a base64 encoded string — identifiable by the mix of random-looking alphanumeric characters ending with `==` (base64 padding). Simply running `base64 data.txt` would encode it further, which is the wrong direction. Instead, we use the `-d` flag to decode it — running `base64 -d data.txt` reveals the password in plain text.
+
+`base64` encodes or decodes data in Base64 format. Base64 is a way of representing binary or text data using only 64 printable ASCII characters (A-Z, a-z, 0-9, +, /). It is commonly used to encode data for transmission over text-based protocols like email or HTTP, and is easily recognisable by its alphanumeric characters and `=` or `==` padding at the end.
+
+      Basic syntax: `base64 <file>`
+
+| Flag | Description |
+|------|-------------|
+| `-d` | Decode a base64 encoded string or file |
+| `-e` | Encode data to base64 (default behaviour, flag optional) |
+| `-i` | Ignore non-alphabet characters when decoding |
+| `-w <number>` | Wrap encoded output at specified column e.g. `-w 0` disables line wrapping |
+
+Base64 is NOT encryption — it is just an encoding scheme. Anyone can decode it instantly. Never confuse encoding with security.
+====================================================================================================================================================================================================================================================================================================================================================================================================
+
+**Level 11 - Level 12: The password for the next level is stored in the file data.txt, where all lowercase (a-z) and uppercase (A-Z) letters have been rotated by 13 positions
+
+    ssh bandit11@bandit.labs.overthewire.org -p 2220
+    password: dtR173fZKb0RRsDFSGsg2RWnpNVj3qRr
+
+bandit11@bandit:~$ ls
+data.txt
+bandit11@bandit:~$ cat data.txt | tr 'A-Za-z' 'N-ZA-Mn-za-m'
+The password is 7x16WNeHIi5YkIhWsfFIqoognUTyj9Q4
+
+ROT13 is a simple letter substitution cipher that shifts every letter by 13 places in the alphabet. Since there are 26 letters, applying ROT13 twice brings you back to the original text — making encoding and decoding identical.`ROT13` is not a standalone Linux command, so we use `tr` to perform the substitution manually. Running `cat data.txt | tr 'A-Za-z' 'N-ZA-Mn-za-m'` pipes the file content into `tr` which swaps every letter to its ROT13 equivalent, revealing the password.
+
+Understanding `tr 'A-Za-z' 'N-ZA-Mn-za-m'`
+`tr` works by mapping every character in the first set to the corresponding character in the second set, position by position.
+ The first set `A-Za-z` is simply all 26 uppercase letters followed by all 26 lowercase letters — the input alphabet.
+
+The second set `N-ZA-Mn-za-m` is where the ROT13 shift happens:
+
+| Chunk | Meaning |
+|-------|---------|
+| `N-Z` | Letters N through Z (13 letters) — A maps to N, B to O, and so on |
+| `A-M` | Letters A through M (13 letters) — N maps to A, O to B, and so on |
+| `n-z` | Lowercase n through z (13 letters) — same logic for lowercase |
+| `a-m` | Lowercase a through m (13 letters) — completes the lowercase shift |
+
+So the full mapping looks like this:
+A B C D E F G H I J K L M  →  N O P Q R S T U V W X Y Z
+N O P Q R S T U V W X Y Z  →  A B C D E F G H I J K L M
+
+The alphabet is split into two halves of 13. The first half maps to the second half and vice versa — that's the ROT13 logic.
+
+`tr` (translate) substitutes, deletes, or squeezes characters in a stream of text. It does not accept filenames directly — input must be piped or redirected to it.
+  Basic syntax: `tr <set1> <set2>`
+
+| Flag | Description |
+|------|-------------|
+| `-d` | Delete characters in set1 e.g. `tr -d '0-9'` removes all digits |
+| `-s` | Squeeze repeated characters into one e.g. `tr -s ' '` collapses multiple spaces |
+| `-c` | Complement — apply to all characters NOT in set1 |
+| `-cd` | Combine complement and delete — delete everything not in set1 |
+
+`tr` only works on streams, so always pair it with `cat`, pipe `|`, or input redirection `<`.
+=========================================================================================================================================================================================================================
+
+**Level 12 - Level 13: The password for the next level is stored in the file data.txt, which is a hexdump of a file that has been repeatedly compressed. For this level it may be useful to create a directory under /tmp in which you can work. Use mkdir with a hard to guess directory name. Or better, use the command “mktemp -d”. Then copy the datafile using cp, and rename it using mv (read the manpages!)**
+
+   ssh bandit12@bandit.labs.overthewire.org -p 2220
+    password: 7x16WNeHIi5YkIhWsfFIqoognUTyj
+
+bandit12@bandit:~$ ls
+data.txt
+bandit12@bandit:~$ file data.txt
+data.txt: ASCII text
+bandit12@bandit:~$ cat data.txt
+00000000: 1f8b 0808 10da cf69 0203 6461 7461 322e  .......i..data2.
+00000010: 6269 6e00 0140 02bf fd42 5a68 3931 4159  bin..@...BZh91AY
+00000020: 2653 59e1 71be e800 0018 7fff dec6 ff7c  &SY.q..........|
+00000030: bd9f 4fbf ff77 ffff bfed af5d bffb dffd  ..O..w.....]....
+00000040: a8fa cfdf fbfb ffbb dd7f f5fb b001 3b18  ..............;.
+00000050: 1006 83d4 0340 d000 1934 0034 0006 81a0  .....@...4.4....
+00000060: 00d0 000d 0034 0d0c 8000 0d1a 3406 8068  .....4......4..h
+00000070: 69a6 4d1a 0d1b 48da 40da 3510 0003 4006  i.M...H.@.5...@.
+00000080: 8000 001e a00d 001e a680 3400 01a7 a800  ..........4.....
+00000090: 0680 c4d0 000d 1a3d 11ea 1a00 d343 f541  .......=.....C.A
+000000a0: a006 269a 03d4 0e9a 1a68 3434 340d 0d06  ..&......h444...
+000000b0: 8193 400c 8320 0340 3434 68d1 a000 68c4  ..@.. .@44h...h.
+000000c0: 6026 2000 1a06 2000 064d 000d 0000 6432  & ... ..M....d2
+000000d0: 3c08 0200 4056 d394 6653 6796 5b22 e9b8  <...@V..fSg.["..
+000000e0: da82 c52c 0888 c1d0 6cee 6a43 f164 4a14  ...,....l.jC.dJ.
+000000f0: 6b4a 1d69 111a 91c1 93db ee12 8667 ca43  kJ.i.........g.C
+00000100: d036 43f6 3d4f 4999 6065 4091 9a2f bc4d  .6C.=OI.e@../.M
+00000110: 6516 68e6 34ef a4ce 1091 b9ea 52a7 cf48  e.h.4.......R..H
+00000120: 3e4f 84c1 a2c5 2383 200a c41e 28ed 8e9b  >O....#. ...(...
+00000130: 7868 a526 970b 4041 054d 3b25 c0bb 6bdf  xh.&..@A.M;%..k.
+00000140: 1afe 9771 045e 3213 58a5 d129 9cd8 3dd8  ...q.^2.X..)..=.
+00000150: 9ca1 2561 c91b 1527 afc0 5643 0425 45ea  ..%a...'..VC.%E.
+00000160: dc87 cf98 2104 c30f 01ad 19fb 7e34 c0ba  ....!.......~4..
+00000170: 30e1 135a 743d f3d4 6467 cb43 9f4e 0cc1  0..Zt=..dg.C.N..
+00000180: 052a 12c1 55f3 2344 2254 b108 6571 016d  .*..U.#D"T..eq.m
+00000190: caab c4f6 8c3c e383 2e61 1088 490f 588b  .....<...a..I.X.
+000001a0: e6a4 e14a 8cc5 c226 9950 c091 3c2c 6ec5  ...J...&.P..<,n.
+000001b0: 7150 851a ac29 1272 422b 3c62 0da4 1bd7  qP...).rB+<b....
+000001c0: 605d 7981 aa02 332b bb27 9358 bac9 6ddc  `]y...3+.'.X..m.
+000001d0: 1aae 9848 0ff1 46cb c3a0 1f43 9871 0ef8  ...H..F....C.q..
+000001e0: 4429 ca3b 9fab 2e74 2b96 6f24 ad53 e4ad  D).;...t+.o$.S..
+000001f0: e247 28c8 86d4 0ec0 10ad 412a 0fec 11bc  .G(.......A*....
+00000200: 6cd6 3c01 ff5f 8f88 9247 582a 4d44 4942  l.<.._...GX*MDIB
+00000210: 92d2 5f6b 61d4 2d2b 5723 179d 98cc a44c  .._ka.-+W#.....L
+00000220: 951d c6c6 f143 2af1 5219 1fdd 3e81 8dc4  .....C*.R...>...
+00000230: c586 98f0 98e4 d5bd 910c f59a 0142 864b  .............B.K
+00000240: b8f2 08f3 65d4 9d5d 5e29 0130 fe7f c5dc  ....e..]^).0....
+00000250: 914e 1424 385c 6fba 0081 589d 8f40 0200  .N.$8\o...X..@..
+00000260: 00                                       .
+bandit12@bandit:~$ mkdir hex
+mkdir: cannot create directory ‘hex’: Permission denied
+bandit12@bandit:~$ mkdir temp
+mkdir: cannot create directory ‘temp’: Permission denied
+bandit12@bandit:~$ cd /tmp
+bandit12@bandit:/tmp$ ls
+ls: cannot open directory '.': Permission denied
+bandit12@bandit:/tmp$ mkdir dire
+bandit12@bandit:/tmp$ ls
+ls: cannot open directory '.': Permission denied
+bandit12@bandit:/tmp$ cd ..
+bandit12@bandit:/$ mv data.txt /tmp/dire/data.bin
+mv: cannot stat 'data.txt': No such file or directory
+bandit12@bandit:~$ cp data.txt /tmp/dire/
+bandit12@bandit:~$ cd /tmp/dire
+bandit12@bandit:/tmp/dire$ xxd -r data.txt > data.bin
+bandit12@bandit:/tmp/dire$ file data.bin
+data.bin: gzip compressed data, was "data2.bin", last modified: Fri Apr  3 15:17:36 2026, max compression, from Unix, original size modulo 2^32 576
+bandit12@bandit:/tmp/dire$ mv data.bin data.bin.gz
+bandit12@bandit:/tmp/dire$ gzip -d data.bin.gz
+bandit12@bandit:/tmp/dire$ file data.bin
+data.bin: bzip2 compressed data, block size = 900k
+bandit12@bandit:/tmp/dire$ mv data.bin data.bin.bz2
+bandit12@bandit:/tmp/dire$ bzip2 -d data.bin.bz2
+bandit12@bandit:/tmp/dire$ file data.bin
+data.bin: gzip compressed data, was "data4.bin", last modified: Fri Apr  3 15:17:36 2026, max compression, from Unix, original size modulo 2^32 20480
+bandit12@bandit:/tmp/dire$ mv data.bin data.bin.gz
+bandit12@bandit:/tmp/dire$ gzip -d data.bin.gz
+bandit12@bandit:/tmp/dire$ file data.bin
+data.bin: POSIX tar archive (GNU)
+bandit12@bandit:/tmp/dire$ tar xf data.bin
+bandit12@bandit:/tmp/dire$ ls
+data5.bin  data.bin  data.txt
+bandit12@bandit:/tmp/dire$ file data.bin
+data.bin: POSIX tar archive (GNU)
+bandit12@bandit:/tmp/dire$ file data5.bin
+data5.bin: POSIX tar archive (GNU)
+bandit12@bandit:/tmp/dire$ lstar xf data5.bin
+Command 'lstar' not found, did you mean:
+  command 'jstar' from deb joe (4.6-1.1)
+  command 'jstar' from deb joe-jupp (3.1.41-1)
+  command 'lsar' from deb unar (1.10.7+ds1+really1.10.1-2build3)
+Try: apt install <deb name>
+bandit12@bandit:/tmp/dire$ tar xf data5.bin
+bandit12@bandit:/tmp/dire$ ls
+data5.bin  data6.bin  data.bin  data.txt
+bandit12@bandit:/tmp/dire$ file data6.bin
+data6.bin: bzip2 compressed data, block size = 900k
+bandit12@bandit:/tmp/dire$ mv data6.bin data6.bin.bz2
+bandit12@bandit:/tmp/dire$ bzip2 -d data6.bin.bz2
+bandit12@bandit:/tmp/dire$ file data6.bin
+data6.bin: POSIX tar archive (GNU)
+bandit12@bandit:/tmp/dire$ tar xf data6.bin
+bandit12@bandit:/tmp/dire$ ls
+data5.bin  data6.bin  data8.bin  data.bin  data.txt
+bandit12@bandit:/tmp/dire$ file data8.bin
+data8.bin: gzip compressed data, was "data9.bin", last modified: Fri Apr  3 15:17:36 2026, max compression, from Unix, original size modulo 2^32 49
+bandit12@bandit:/tmp/dire$ mv data8.bin data8.bin.gz
+bandit12@bandit:/tmp/dire$ gzip -d data8.bin.gz
+bandit12@bandit:/tmp/dire$ file data8.bin
+data8.bin: ASCII text
+bandit12@bandit:/tmp/dire$ cat data8.bin
+The password is FO5dwFsc0cbaIiH0h8J2eUks2vdTDwAn
+
+This level involves two main challenges — first converting a hex dump back to a binary file, then repeatedly decompressing multiple layers of compression to finally reveal the password. The file had been compressed 8 times using different tools in different orders.
+Since we can't create directories in the home directory, we first copy the file to a temp directory in `/tmp` to work with it.
+
+The full decompression chain was:
+hexdump → gzip → bzip2 → gzip → tar → tar → bzip2 → tar → gzip → ASCII text
+
+### Step-by-Step Process
+
+**Step 1 — Copy file to /tmp and reverse the hex dump**
+`cat data.txt` shows the file is a hexdump (columns of hex values with 
+ASCII on the right). We use `xxd -r` to convert it back to a binary file.
+```bash
+cp data.txt /tmp/dire/
+cd /tmp/dire
+xxd -r data.txt > data.bin
+```
+
+**Step 2 — Identify and decompress each layer**
+After each decompression, we run `file` to check what the next layer is, 
+then decompress accordingly. The key rule is:
+- gzip files must have `.gz` extension before decompressing
+- bzip2 files must have `.bz2` extension before decompressing
+- tar files can be extracted directly without renaming
+
+```bash
+# Layer 1 - gzip
+mv data.bin data.bin.gz
+gzip -d data.bin.gz
+
+# Layer 2 - bzip2
+mv data.bin data.bin.bz2
+bzip2 -d data.bin.bz2
+
+# Layer 3 - gzip
+mv data.bin data.bin.gz
+gzip -d data.bin.gz
+
+# Layer 4 - tar
+tar xf data.bin        # extracts data5.bin
+
+# Layer 5 - tar
+tar xf data5.bin       # extracts data6.bin
+
+# Layer 6 - bzip2
+mv data6.bin data6.bin.bz2
+bzip2 -d data6.bin.bz2
+
+# Layer 7 - tar
+tar xf data6.bin       # extracts data8.bin
+
+# Layer 8 - gzip
+mv data8.bin data8.bin.gz
+gzip -d data8.bin.gz
+
+# Final - ASCII text
+cat data8.bin
+
+xxd — creates a hex dump of a file or converts a hex dump back to binary.
+Basic syntax: `xxd <file>`
+
+| Flag | Description |
+|------|-------------|
+| `-r` | Reverse mode — converts hex dump back to binary |
+| `-l <number>` | Limit output to specified number of bytes |
+| `-c <number>` | Number of bytes per line (default 16) |
+| `-b` | Output in binary (bits) instead of hex |
+
+gzip — compresses or decompresses files using the gzip format.
+Basic syntax: `gzip <file>`
+
+| Flag | Description |
+|------|-------------|
+| `-d` | Decompress a `.gz` file |
+| `-k` | Keep the original file after compressing/decompressing |
+| `-v` | Verbose — show compression ratio |
+| `-r` | Recursively compress files in a directory |
+
+bzip2 — compresses or decompresses files using the bzip2 format, 
+generally achieves better compression than gzip.
+Basic syntax: `bzip2 <file>`
+
+| Flag | Description |
+|------|-------------|
+| `-d` | Decompress a `.bz2` file |
+| `-k` | Keep the original file after compressing/decompressing |
+| `-v` | Verbose — show compression details |
+| `-z` | Force compression (default behaviour) |
+
+tar — archives multiple files into one file, often combined with 
+compression. Unlike gzip and bzip2, tar can bundle multiple files together.
+Basic syntax: `tar <flags> <file>`
+
+| Flag | Description |
+|------|-------------|
+| `x` | Extract files from archive |
+| `f` | Specifies the archive filename |
+| `c` | Create a new archive |
+| `v` | Verbose — list files being processed |
+| `z` | Filter through gzip (for `.tar.gz` files) |
+| `j` | Filter through bzip2 (for `.tar.bz2` files) |
+
+The key habit in this level is always running `file <filename>` after each decompression step — never assume what the next layer is, always verify.
+===========================================================================================================================================================================================
+
+**Level 13 - Level 14: The password for the next level is stored in /etc/bandit_pass/bandit14 and can only be read by user bandit14. For this level, you don’t get the next password, but you get a private SSH key that can be used to log into the next level. Look at the commands that logged you into previous bandit levels, and find out how to use the key for this level.If you need help with this level: a hint file can be found in the home directory.Make sure to read the error messages as they are informative.**
+
+  ssh bandit13@bandit.labs.overthewire.org -p 2220
+  password: FO5dwFsc0cbaIiH0h8J2eUks2vdTDwAn
+  
+
+bandit13@bandit:~$ ls
+HINT  sshkey.private
+bandit13@bandit:~$ cat HINT
+If you have trouble with this level, note the following:
+
+1) As for all other levels, this level has a website with information:
+   https://overthewire.org/wargames/bandit/bandit14.html
+2) No, the level is not broken. To verify, see:
+   https://status.overthewire.org/
+3) The current version of OverTheWire prevents logging in from one
+   level to another via localhost. Log out, and see 1)
+4) If you get errors, read the error message on your screen.
+   We mean it!
+bandit13@bandit:~$ exit
+logout
+Connection to bandit.labs.overthewire.org closed.
+                                                                                                                   
+┌──(kali㉿25029826)-[~]
+└─$ scp -P 2220 bandit13@bandit.labs.overthewire.org:sshkey.private .
+                         _                     _ _ _   
+                        | |__   __ _ _ __   __| (_) |_ 
+                        | '_ \ / _` | '_ \ / _` | | __|
+                        | |_) | (_| | | | | (_| | | |_ 
+                        |_.__/ \__,_|_| |_|\__,_|_|\__|
+                                                       
+
+                      This is an OverTheWire game server. 
+            More information on http://www.overthewire.org/wargames
+
+backend: gibson-0
+bandit13@bandit.labs.overthewire.org's password: 
+Permission denied, please try again.
+bandit13@bandit.labs.overthewire.org's password: 
+sshkey.private                                                                   100% 1679    15.4KB/s   00:00    
+                                                                                                                   
+┌──(kali㉿25029826)-[~]
+└─$ ssh -i sshkey.private bandit14@bandit.labs.overthewire.org -p 2220                                          
+                         _                     _ _ _   
+                        | |__   __ _ _ __   __| (_) |_ 
+                        | '_ \ / _` | '_ \ / _` | | __|
+                        | |_) | (_| | | | | (_| | | |_ 
+                        |_.__/ \__,_|_| |_|\__,_|_|\__|
+                                                       
+
+                      This is an OverTheWire game server. 
+            More information on http://www.overthewire.org/wargames
+
+backend: gibson-0
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@         WARNING: UNPROTECTED PRIVATE KEY FILE!          @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+Permissions 0640 for 'sshkey.private' are too open.
+It is required that your private key files are NOT accessible by others.
+This private key will be ignored.
+Load key "sshkey.private": bad permissions
+bandit14@bandit.labs.overthewire.org's password: 
+
+zsh: suspended  ssh -i sshkey.private bandit14@bandit.labs.overthewire.org -p 2220
+                                                                                                                   
+┌──(kali㉿25029826)-[~]
+└─$ chmod 600 sshkey.private                                          
+                                                                                                                   
+┌──(kali㉿25029826)-[~]
+└─$ ssh -i sshkey.private bandit14@bandit.labs.overthewire.org -p 2220
+                         _                     _ _ _   
+                        | |__   __ _ _ __   __| (_) |_ 
+                        | '_ \ / _` | '_ \ / _` | | __|
+                        | |_) | (_| | | | | (_| | | |_ 
+                        |_.__/ \__,_|_| |_|\__,_|_|\__|
+                                                       
+
+                      This is an OverTheWire game server. 
+            More information on http://www.overthewire.org/wargames
+
+backend: gibson-0
+
+      ,----..            ,----,          .---.
+     /   /   \         ,/   .`|         /. ./|
+    /   .     :      ,`   .'  :     .--'.  ' ;
+   .   /   ;.  \   ;    ;     /    /__./ \ : |
+  .   ;   /  ` ; .'___,/    ,' .--'.  '   \' .
+  ;   |  ; \ ; | |    :     | /___/ \ |    ' '
+  |   :  | ; | ' ;    |.';  ; ;   \  \;      :
+  .   |  ' ' ' : `----'  |  |  \   ;  `      |
+  '   ;  \; /  |     '   :  ;   .   \    .\  ;
+   \   \  ',  /      |   |  '    \   \   ' \ |
+    ;   :    /       '   :  |     :   '  |--"
+     \   \ .'        ;   |.'       \   \ ;
+  www. `---` ver     '---' he       '---" ire.org
 
 
+Welcome to OverTheWire!
 
+If you find any problems, please report them to the #wargames channel on
+discord or IRC.
 
+--[ Playing the games ]--
+
+  This machine might hold several wargames.
+  If you are playing "somegame", then:
+
+    * USERNAMES are somegame0, somegame1, ...
+    * Most LEVELS are stored in /somegame/.
+    * PASSWORDS for each level are stored in /etc/somegame_pass/.
+
+  Write-access to homedirectories is disabled. It is advised to create a
+  working directory with a hard-to-guess name in /tmp/.  You can use the
+  command "mktemp -d" in order to generate a random and hard to guess
+  directory in /tmp/.  Read-access to both /tmp/ is disabled and to /proc
+  restricted so that users cannot snoop on eachother. Files and directories
+  with easily guessable or short names will be periodically deleted! The /tmp
+  directory is regularly wiped.
+  Please play nice:
+
+    * don't leave orphan processes running
+    * don't leave exploit-files laying around
+    * don't annoy other players
+    * don't post passwords or spoilers
+    * again, DONT POST SPOILERS!
+      This includes writeups of your solution on your blog or website!
+
+--[ Tips ]--
+
+  This machine has a 64bit processor and many security-features enabled
+  by default, although ASLR has been switched off.  The following
+  compiler flags might be interesting:
+
+    -m32                    compile for 32bit
+    -fno-stack-protector    disable ProPolice
+    -Wl,-z,norelro          disable relro
+
+  In addition, the execstack tool can be used to flag the stack as
+  executable on ELF binaries.
+
+  Finally, network-access is limited for most levels by a local
+  firewall.
+
+--[ Tools ]--
+
+ For your convenience we have installed a few useful tools which you can find
+ in the following locations:
+
+    * gef (https://github.com/hugsy/gef) in /opt/gef/
+    * pwndbg (https://github.com/pwndbg/pwndbg) in /opt/pwndbg/
+    * gdbinit (https://github.com/gdbinit/Gdbinit) in /opt/gdbinit/
+    * pwntools (https://github.com/Gallopsled/pwntools)
+    * radare2 (http://www.radare.org/)
+
+--[ More information ]--
+
+  For more information regarding individual wargames, visit
+  http://www.overthewire.org/wargames/
+
+  For support, questions or comments, contact us on discord or IRC.
+
+  Enjoy your stay!
+
+bandit14@bandit:~$ cat /etc/bandit_pass/bandit14
+MU4VWeTyJk8ROof1qqmcBPaLh7lDCPvS
+
+This level is different from previous ones — instead of finding a password in a file, we are given an SSH private key (`sshkey.private`) that lets us log directly into the next level without a password. Since the hint warns that logging in from localhost is blocked, we need to download the key to our local machine first and then use it to connect as bandit14.
+
+Step by Step Process
+
+**Step 1 — Download the private key to local machine**
+We use `scp` (Secure Copy Protocol) to download the key from the bandit 
+server to our local machine. This is run from our local terminal, not the 
+bandit server.
+```bash
+scp -P 2220 bandit13@bandit.labs.overthewire.org:sshkey.private .
+```
+The `.` at the end means "copy it to the current directory on my local machine."
+
+**Step 2 — Fix the key permissions**
+SSH refuses to use a private key that is accessible by others for security 
+reasons. When we first try to connect, we get a "WARNING: UNPROTECTED 
+PRIVATE KEY FILE!" error because the permissions are too open (0640). 
+We fix this with `chmod 600` which makes the file readable and writable 
+only by us:
+```bash
+chmod 600 sshkey.private
+```
+
+**Step 3 — Log in as bandit14 using the private key**
+Instead of a password, we use the `-i` flag to specify the private key file:
+```bash
+ssh -i sshkey.private bandit14@bandit.labs.overthewire.org -p 2220
+```
+
+**Step 4 — Read the password**
+Once logged in as bandit14, we can read the password for this level which 
+is stored in `/etc/bandit_pass/bandit14`:
+```bash
+cat /etc/bandit_pass/bandit14
+```
+
+`scp` (Secure Copy Protocol) securely copies files between a local machine 
+and a remote server, or between two remote servers. It uses SSH under the 
+hood so the transfer is encrypted.
+Basic syntax: `scp <source> <destination>`
+
+| Flag | Description |
+|------|-------------|
+| `-P` | Specify the port number (note: capital P, unlike ssh which uses lowercase) |
+| `-i` | Specify an identity file (private key) for authentication |
+| `-r` | Recursively copy entire directories |
+| `-v` | Verbose mode — show detailed transfer information |
+| `-C` | Enable compression during transfer |
+
+**Syntax for downloading from remote to local:**
+```bash
+scp -P  user@host:remote/path /local/path
+```
+
+**Syntax for uploading from local to remote:**
+```bash
+scp -P  /local/path user@host:remote/path
+```
+
+`chmod` changes the permissions of a file or directory.
+`chmod 600` means:
+- `6` (owner) = read + write
+- `0` (group) = no permissions
+- `0` (others) = no permissions
+
+This ensures only you can read the private key, which is a security requirement for SSH.
+
+Private key files should always have `chmod 600` permissions. 
+  SSH will outright refuse to use keys with permissions that are too open — this is a deliberate security feature to prevent other users on the system from stealing your keys.
+=============================================================================================================================================================================================================================
+
+**Level 14 - Level 15: The password for the next level can be retrieved by submitting the password of the current level to port 30000 on localhost.
+
+ssh -i sshkey.private bandit14@bandit.labs.overthewire.org -p 2220
+
+bandit14@bandit:~$ echo "MU4VWeTyJk8ROof1qqmcBPaLh7lDCPvS" | nc localhost 30000
+Correct!
+8xCjnmgoKbGLhHFAZlGE5Tmu4M2tKJQo
+
+This level introduces the concept of network communication — instead of reading a file, we need to submit the current level's password to a listening service on port 30000 of the bandit server. The important thing to note is that `localhost` refers to the bandit server itself, not our local machine — so the `nc` command must be run from inside the bandit server, not from our local terminal.
+
+Step by Step Process
+
+**Step 1 — Log into bandit14 using the private key**
+Since bandit14 has no password and uses key-based authentication, we log 
+in using the private key we downloaded in the previous level:
+```bash
+ssh -i sshkey.private bandit14@bandit.labs.overthewire.org -p 2220
+```
+
+**Step 2 — Submit the password to port 30000**
+Once logged in, we pipe the current level's password into `nc` which sends 
+it to port 30000 on localhost:
+```bash
+echo "MU4VWeTyJk8ROof1qqmcBPaLh7lDCPvS" | nc localhost 30000
+```
+The server responds with `Correct!` and gives us the next password.
+
+Why `ssh -i` instead of a regular password login?
+Normally when we SSH into a bandit level we use:
+```bash
+ssh bandit14@bandit.labs.overthewire.org -p 2220
+```
+And then type a password when prompted. But in this level, bandit14 has 
+no password — instead it uses **SSH key-based authentication**. 
+
+SSH key authentication works by having two files:
+- **Private key** (`sshkey.private`) — stays on your machine, never shared
+- **Public key** — stored on the server, used to verify your identity
+
+When you connect with `-i sshkey.private`, SSH proves your identity by 
+using the private key to solve a cryptographic challenge set by the server 
+using the public key. No password is ever sent over the network, making 
+it more secure than password authentication.
+
+The `-i` flag simply tells SSH which private key file to use:
+```bash
+ssh -i  @ -p 
+```
+
+Key-based SSH authentication is the industry standard in real-world servers. Most cloud servers (AWS, Azure, GCP) disable password login entirely and only allow key-based authentication.
+
+The `nc` (Netcat) Command
+`nc` (Netcat) is a networking tool that can send and receive data over 
+TCP or UDP connections. It is often called the "Swiss Army knife" of 
+networking.
+Basic syntax: `nc <host> <port>`
+
+| Flag | Description |
+|------|-------------|
+| `-l` | Listen mode — wait for incoming connections |
+| `-p` | Specify port number |
+| `-v` | Verbose — show connection details |
+| `-u` | Use UDP instead of TCP |
+| `-z` | Zero I/O mode — used for port scanning |
+| `-w` | Set timeout for connections |
+
+Common uses of `nc`:
+- Sending data to a port: `echo "data" | nc localhost 30000`
+- Listening for connections: `nc -l -p 1234`
+- Port scanning: `nc -z host 1-100`
+- Transferring files between machines
+
+ Netcat is heavily used in CTFs, penetration testing, and network debugging. Understanding it well will be very useful in later Bandit levels and other wargames.
+=======================================================================================================================================================================================================
 
