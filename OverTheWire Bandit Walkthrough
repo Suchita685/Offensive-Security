@@ -945,3 +945,646 @@ Common uses of `nc`:
  Netcat is heavily used in CTFs, penetration testing, and network debugging. Understanding it well will be very useful in later Bandit levels and other wargames.
 =======================================================================================================================================================================================================
 
+**Level 15 - Level 16: The password for the next level can be retrieved by submitting the password of the current level to port 30001 on localhost using SSL/TLS encryption.
+Helpful note: Getting “DONE”, “RENEGOTIATING” or “KEYUPDATE”? Read the “CONNECTED COMMANDS” section in the manpage.
+
+ssh bandit15@bandit.labs.overthewire.org -p 2220 
+password: 8xCjnmgoKbGLhHFAZlGE5Tmu4M2tKJQo
+
+bandit15@bandit:~$ echo "8xCjnmgoKbGLhHFAZlGE5Tmu4M2tKJQo" | nc localhost 30001
+bandit15@bandit:~$ echo "8xCjnmgoKbGLhHFAZlGE5Tmu4M2tKJQo" | openssl s_client -connect localhost:30001 -quiet
+Can't use SSL_get_servername
+depth=0 CN = SnakeOil
+verify error:num=18:self-signed certificate
+verify return:1
+depth=0 CN = SnakeOil
+verify return:1
+Correct!
+kSkvUpMQ7lBYyCM4GBPvCvT1BfWRy0Dx
+
+This level is very similar to the previous one — we need to submit the current password to a port on localhost. The key difference is that port 30001 requires an **SSL encrypted connection** instead of a plain text one. Using `nc` like the previous level returns nothing because the server expects an encrypted handshake first. Instead we use `openssl s_client` to establish a secure SSL connection and submit the password through it.
+
+Why `nc` doesn't work here:-
+`nc` sends data as plain text with no encryption. Port 30001 is running an SSL/TLS service that expects an encrypted connection — when `nc` connects and sends plain text, the server doesn't understand it and silently drops the connection. This is why we get no output at all.
+
+Step-by-Step Process:-
+
+**Step 1 — Log into bandit15**
+```bash
+ssh bandit15@bandit.labs.overthewire.org -p 2220
+```
+
+**Step 2 — Submit the password over SSL**
+```bash
+echo "8xCjnmgoKbGLhHFAZlGE5Tmu4M2tKJQo" | openssl s_client -connect localhost:30001 -quiet
+```
+The server responds with `Correct!` and gives us the next password.
+
+`openssl` is a toolkit that implements SSL/TLS protocols and various 
+cryptographic functions. It is used for encrypting data, creating 
+certificates, testing SSL connections, and more.
+
+**When to use it:**
+- When a service requires an SSL/TLS encrypted connection
+- When testing if an SSL certificate is valid
+- When encrypting or decrypting files
+- When generating cryptographic keys or certificates
+
+Basic syntax: `openssl <command> <options>`
+
+`openssl s_client`
+`s_client` is the specific openssl subcommand that acts as an SSL/TLS 
+client — it connects to a server using SSL encryption, just like a 
+browser does when visiting an HTTPS website.
+
+Basic syntax: `openssl s_client -connect <host>:<port>`
+
+| Flag | Description |
+|------|-------------|
+| `-connect` | Specify the host and port to connect to e.g. `localhost:30001` |
+| `-quiet` | Suppress the SSL handshake details and certificate info, showing only the actual data exchange |
+| `-CAfile` | Specify a certificate authority file for verification |
+| `-cert` | Use a specific client certificate |
+| `-key` | Use a specific private key |
+| `-tls1_2` | Force TLS version 1.2 |
+| `-starttls` | Use STARTTLS protocol e.g. for email servers |
+
+Difference between `nc` and `openssl s_client`
+
+| | `nc` | `openssl s_client` |
+|---|---|---|
+| Encryption | None — plain text | SSL/TLS encrypted |
+| Use case | Plain TCP/UDP connections | Encrypted SSL/TLS connections |
+| Port type | Unencrypted ports | HTTPS, encrypted services |
+| Example | `nc localhost 30000` | `openssl s_client -connect localhost:30001` |
+
+A simple rule to remember — if the port is running a plain service use `nc`. If it requires encryption (like HTTPS which runs on port 443) use `openssl s_client`. In CTFs, always try `nc` first and if you get no response, switch to `openssl s_client`.
+======================================================================================================================================================================================================================================================================================================================
+
+**Level 16 - Level 17: The credentials for the next level can be retrieved by submitting the password of the current level to a port on localhost in the range 31000 to 32000. First find out which of these ports have a server listening on them. Then find out which of those speak SSL/TLS and which don’t. There is only 1 server that will give the next credentials, the others will simply send back to you whatever you send to it.**
+Helpful note: Getting “DONE”, “RENEGOTIATING” or “KEYUPDATE”? Read the “CONNECTED COMMANDS” section in the manpage.
+
+ssh bandit16@bandit.labs.overthewire.org -p 2220
+password: kSkvUpMQ7lBYyCM4GBPvCvT1BfWRy0Dx
+
+bandit16@bandit:~$ nmap -sV -p 31000-32000
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2026-05-21 12:24 UTC
+WARNING: No targets were specified, so 0 hosts scanned.
+Nmap done: 0 IP addresses (0 hosts up) scanned in 0.32 seconds
+bandit16@bandit:~$ nmap -sV localhost -p 31000-32000
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2026-05-21 12:25 UTC
+Nmap scan report for localhost (127.0.0.1)
+Host is up (0.00015s latency).
+Not shown: 996 closed tcp ports (conn-refused)
+PORT      STATE SERVICE     VERSION
+31046/tcp open  echo
+31518/tcp open  ssl/echo
+31691/tcp open  echo
+31790/tcp open  ssl/unknown
+31960/tcp open  echo
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port31790-TCP:V=7.94SVN%T=SSL%I=7%D=5/21%Time=6A0EF9CE%P=x86_64-pc-linu
+SF:x-gnu%r(GenericLines,32,"Wrong!\x20Please\x20enter\x20the\x20correct\x2
+SF:0current\x20password\.\n")%r(GetRequest,32,"Wrong!\x20Please\x20enter\x
+SF:20the\x20correct\x20current\x20password\.\n")%r(HTTPOptions,32,"Wrong!\
+SF:x20Please\x20enter\x20the\x20correct\x20current\x20password\.\n")%r(RTS
+SF:PRequest,32,"Wrong!\x20Please\x20enter\x20the\x20correct\x20current\x20
+SF:password\.\n")%r(Help,32,"Wrong!\x20Please\x20enter\x20the\x20correct\x
+SF:20current\x20password\.\n")%r(FourOhFourRequest,32,"Wrong!\x20Please\x2
+SF:0enter\x20the\x20correct\x20current\x20password\.\n")%r(LPDString,32,"W
+SF:rong!\x20Please\x20enter\x20the\x20correct\x20current\x20password\.\n")
+SF:%r(SIPOptions,32,"Wrong!\x20Please\x20enter\x20the\x20correct\x20curren
+SF:t\x20password\.\n");
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 157.94 seconds
+bandit16@bandit:~$ echo "kSkvUpMQ7lBYyCM4GBPvCvT1BfWRy0Dx" | openssl s_client -connect localhost:31518
+CONNECTED(00000003)
+Can't use SSL_get_servername
+depth=0 CN = SnakeOil
+verify error:num=18:self-signed certificate
+verify return:1
+depth=0 CN = SnakeOil
+verify return:1
+---
+Certificate chain
+ 0 s:CN = SnakeOil
+   i:CN = SnakeOil
+   a:PKEY: rsaEncryption, 4096 (bit); sigalg: RSA-SHA256
+   v:NotBefore: Jun 10 03:59:50 2024 GMT; NotAfter: Jun  8 03:59:50 2034 GMT
+---
+Server certificate
+-----BEGIN CERTIFICATE-----
+MIIFBzCCAu+gAwIBAgIUBLz7DBxA0IfojaL/WaJzE6Sbz7cwDQYJKoZIhvcNAQEL
+BQAwEzERMA8GA1UEAwwIU25ha2VPaWwwHhcNMjQwNjEwMDM1OTUwWhcNMzQwNjA4
+MDM1OTUwWjATMREwDwYDVQQDDAhTbmFrZU9pbDCCAiIwDQYJKoZIhvcNAQEBBQAD
+ggIPADCCAgoCggIBANI+P5QXm9Bj21FIPsQqbqZRb5XmSZZJYaam7EIJ16Fxedf+
+jXAv4d/FVqiEM4BuSNsNMeBMx2Gq0lAfN33h+RMTjRoMb8yBsZsC063MLfXCk4p+
+09gtGP7BS6Iy5XdmfY/fPHvA3JDEScdlDDmd6Lsbdwhv93Q8M6POVO9sv4HuS4t/
+jEjr+NhE+Bjr/wDbyg7GL71BP1WPZpQnRE4OzoSrt5+bZVLvODWUFwinB0fLaGRk
+GmI0r5EUOUd7HpYyoIQbiNlePGfPpHRKnmdXTTEZEoxeWWAaM1VhPGqfrB/Pnca+
+vAJX7iBOb3kHinmfVOScsG/YAUR94wSELeY+UlEWJaELVUntrJ5HeRDiTChiVQ++
+wnnjNbepaW6shopybUF3XXfhIb4NvwLWpvoKFXVtcVjlOujF0snVvpE+MRT0wacy
+tHtjZs7Ao7GYxDz6H8AdBLKJW67uQon37a4MI260ADFMS+2vEAbNSFP+f6ii5mrB
+18cY64ZaF6oU8bjGK7BArDx56bRc3WFyuBIGWAFHEuB948BcshXY7baf5jjzPmgz
+mq1zdRthQB31MOM2ii6vuTkheAvKfFf+llH4M9SnES4NSF2hj9NnHga9V08wfhYc
+x0W6qu+S8HUdVF+V23yTvUNgz4Q+UoGs4sHSDEsIBFqNvInnpUmtNgcR2L5PAgMB
+AAGjUzBRMB0GA1UdDgQWBBTPo8kfze4P9EgxNuyk7+xDGFtAYzAfBgNVHSMEGDAW
+gBTPo8kfze4P9EgxNuyk7+xDGFtAYzAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3
+DQEBCwUAA4ICAQAKHomtmcGqyiLnhziLe97Mq2+Sul5QgYVwfx/KYOXxv2T8ZmcR
+Ae9XFhZT4jsAOUDK1OXx9aZgDGJHJLNEVTe9zWv1ONFfNxEBxQgP7hhmDBWdtj6d
+taqEW/Jp06X+08BtnYK9NZsvDg2YRcvOHConeMjwvEL7tQK0m+GVyQfLYg6jnrhx
+egH+abucTKxabFcWSE+Vk0uJYMqcbXvB4WNKz9vj4V5Hn7/DN4xIjFko+nREw6Oa
+/AUFjNnO/FPjap+d68H1LdzMH3PSs+yjGid+6Zx9FCnt9qZydW13Miqg3nDnODXw
++Z682mQFjVlGPCA5ZOQbyMKY4tNazG2n8qy2famQT3+jF8Lb6a4NGbnpeWnLMkIu
+jWLWIkA9MlbdNXuajiPNVyYIK9gdoBzbfaKwoOfSsLxEqlf8rio1GGcEV5Hlz5S2
+txwI0xdW9MWeGWoiLbZSbRJH4TIBFFtoBG0LoEJi0C+UPwS8CDngJB4TyrZqEld3
+rH87W+Et1t/Nepoc/Eoaux9PFp5VPXP+qwQGmhir/hv7OsgBhrkYuhkjxZ8+1uk7
+tUWC/XM0mpLoxsq6vVl3AJaJe1ivdA9xLytsuG4iv02Juc593HXYR8yOpow0Eq2T
+U5EyeuFg5RXYwAPi7ykw1PW7zAPL4MlonEVz+QXOSx6eyhimp1VZC11SCg==
+-----END CERTIFICATE-----
+subject=CN = SnakeOil
+issuer=CN = SnakeOil
+---
+No client certificate CA names sent
+Peer signing digest: SHA256
+Peer signature type: RSA-PSS
+Server Temp Key: X25519, 253 bits
+---
+SSL handshake has read 2103 bytes and written 373 bytes
+Verification error: self-signed certificate
+---
+New, TLSv1.3, Cipher is TLS_AES_256_GCM_SHA384
+Server public key is 4096 bit
+Secure Renegotiation IS NOT supported
+Compression: NONE
+Expansion: NONE
+No ALPN negotiated
+Early data was not sent
+Verify return code: 18 (self-signed certificate)
+---
+KEYUPDATE
+---
+Post-Handshake New Session Ticket arrived:
+SSL-Session:
+    Protocol  : TLSv1.3
+    Cipher    : TLS_AES_256_GCM_SHA384
+    Session-ID: 3AA24E697CD0760E9B72E655408F1C13DFDAFB22B5B2F4CF08B6C61BCDCB50FA
+    Session-ID-ctx: 
+    Resumption PSK: CEE0BBDEB194050F785568E33281720486540C8FA9C12633B0A5B1C84D7DF57D3157C744D1C93500045B8335C4E98026
+    PSK identity: None
+    PSK identity hint: None
+    SRP username: None
+    TLS session ticket lifetime hint: 300 (seconds)
+    TLS session ticket:
+    0000 - 09 2f 87 ce e3 94 02 e1-7b 06 a9 63 91 0c f3 53   ./......{..c...S
+    0010 - 97 05 66 c1 19 46 82 79-a7 81 10 52 97 93 16 da   ..f..F.y...R....
+    0020 - fd 73 6c 4a b1 6a 3e ab-64 14 0d 12 5d 79 9d f4   .slJ.j>.d...]y..
+    0030 - a5 1b 5d 1f 30 f5 f3 d5-08 2e 6b 15 29 c2 fc e9   ..].0.....k.)...
+    0040 - 5c 76 ea 89 9b ec 09 55-13 34 fd 69 cc bc b0 f3   \v.....U.4.i....
+    0050 - 40 35 eb 25 cc 60 ec 62-45 8f 82 3a d2 9d 26 89   @5.%.`.bE..:..&.
+    0060 - 64 30 f8 bb 47 46 4f 87-40 1c 4e fb 25 97 bb 99   d0..GFO.@.N.%...
+    0070 - 6f 27 e2 58 0e 23 16 90-e9 54 df ef 0a be b1 16   o'.X.#...T......
+    0080 - 0c 77 f8 f2 31 eb f0 70-c5 22 2d f1 b5 2b 0e 9f   .w..1..p."-..+..
+    0090 - 8e d8 8e 84 cc 33 c2 dc-51 8d ca 29 80 8a 54 b4   .....3..Q..)..T.
+    00a0 - f1 35 13 9b ab 50 b6 b2-0f 50 d0 b5 3f 84 73 84   .5...P...P..?.s.
+    00b0 - 22 24 23 3a 3e d1 2f 93-0d 5d 5e 04 b4 1e ba e1   "$#:>./..]^.....
+    00c0 - 66 cd cb 42 41 aa 65 71-e8 13 c6 4b 34 22 99 94   f..BA.eq...K4"..
+    00d0 - 5c 9e fb fd 9d 0c 8b 44-fe 8f a5 39 9b 08 24 9e   \......D...9..$.
+
+    Start Time: 1779366712
+    Timeout   : 7200 (sec)
+    Verify return code: 18 (self-signed certificate)
+    Extended master secret: no
+    Max Early Data: 0
+---
+read R BLOCK
+---
+Post-Handshake New Session Ticket arrived:
+SSL-Session:
+    Protocol  : TLSv1.3
+    Cipher    : TLS_AES_256_GCM_SHA384
+    Session-ID: 0DC45638D0A2032D13EF6AC2A9645E3EC4390FD6C7D464784B5459766FC8C700
+    Session-ID-ctx: 
+    Resumption PSK: F70D34F71BE48092646013D4481DE209E6E37F58CBE887BF431A70C54A875490F7039082A0D484D48C6E86279CD41BA6
+    PSK identity: None
+    PSK identity hint: None
+    SRP username: None
+    TLS session ticket lifetime hint: 300 (seconds)
+    TLS session ticket:
+    0000 - 09 2f 87 ce e3 94 02 e1-7b 06 a9 63 91 0c f3 53   ./......{..c...S
+    0010 - 04 36 53 75 86 58 c4 23-cd 90 3a 1d f0 d1 f1 82   .6Su.X.#..:.....
+    0020 - 2a 69 ae 74 22 fe a5 34-e6 bf 02 61 94 86 e2 30   *i.t"..4...a...0
+    0030 - ea 23 18 2a b7 fb 0f e6-42 01 6e c1 67 0c 02 0c   .#.*....B.n.g...
+    0040 - 30 2b 88 65 85 eb e5 68-99 cf 12 3b 28 73 6a c7   0+.e...h...;(sj.
+    0050 - c4 90 e7 a4 74 c4 82 c6-7e 56 82 72 17 c2 80 65   ....t...~V.r...e
+    0060 - 5a a2 ce c9 01 6d ba 79-e0 e9 81 19 59 a8 77 e3   Z....m.y....Y.w.
+    0070 - 24 fc 61 90 28 81 d1 69-54 3c 77 c7 a5 d2 df 37   $.a.(..iT<w....7
+    0080 - 9a 30 d2 a4 0f 46 9b 11-83 d8 26 66 95 c9 6b fd   .0...F....&f..k.
+    0090 - f9 4b 4c de fb 3e 76 0c-79 df 24 dd 83 2a 11 97   .KL..>v.y.$..*..
+    00a0 - d3 fa 69 a6 3f 59 f4 55-d1 14 9e 15 df be 08 26   ..i.?Y.U.......&
+    00b0 - a5 4f 3a 3d 3f 7c c1 73-31 c6 92 df f0 f0 e0 af   .O:=?|.s1.......
+    00c0 - 55 e1 f2 ab d8 29 09 31-a1 68 6b f6 e4 25 4f 33   U....).1.hk..%O3
+    00d0 - 68 3e be 39 3a cf d0 41-01 c0 1f d0 43 7c 94 b0   h>.9:..A....C|..
+
+    Start Time: 1779366712
+    Timeout   : 7200 (sec)
+    Verify return code: 18 (self-signed certificate)
+    Extended master secret: no
+    Max Early Data: 0
+---
+read R BLOCK
+DONE
+bandit16@bandit:~$ echo "kSkvUpMQ7lBYyCM4GBPvCvT1BfWRy0Dx" | openssl s_client -connect localhost:31790 -quiet
+Can't use SSL_get_servername
+depth=0 CN = SnakeOil
+verify error:num=18:self-signed certificate
+verify return:1
+depth=0 CN = SnakeOil
+verify return:1
+Correct!
+
+⚠️ The private key retrieved from port 31790 is not included here. 
+   Save it locally as `sshkey17.private`, set permissions with 
+  `chmod 600 sshkey17.private`, then use it to log into bandit17.
+
+bandit16@bandit:~$ mkdir /tmp/mykey
+mkdir: cannot create directory ‘/tmp/mykey’: File exists
+bandit16@bandit:~$ cd /tmp
+bandit16@bandit:/tmp$ mkdir mykey
+mkdir: cannot create directory ‘mykey’: File exists
+bandit16@bandit:/tmp$ vim sshkey17.private
+bandit16@bandit:/tmp$ chmod 600 sshkey17.private
+bandit16@bandit:/tmp$ ssh -i sshkey17.private bandit17@bandit.labs.overthewire.org -p 2220
+The authenticity of host '[bandit.labs.overthewire.org]:2220 ([127.0.0.1]:2220)' can't be established.
+ED25519 key fingerprint is SHA256:C2ihUBV7ihnV1wUXRb4RrEcLfXC5CXlhmAAM/urerLY.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Could not create directory '/home/bandit16/.ssh' (Permission denied).
+Failed to add the host to the list of known hosts (/home/bandit16/.ssh/known_hosts).
+                         _                     _ _ _   
+                        | |__   __ _ _ __   __| (_) |_ 
+                        | '_ \ / _` | '_ \ / _` | | __|
+                        | |_) | (_| | | | | (_| | | |_ 
+                        |_.__/ \__,_|_| |_|\__,_|_|\__|
+                                                       
+
+                      This is an OverTheWire game server. 
+            More information on http://www.overthewire.org/wargames
+
+!!! You are trying to log into this SSH server with a password on port 2220 from localhost.
+!!! Connecting from localhost is blocked to conserve resources.
+!!! Please log out and log in again.
+
+backend: gibson-0
+Received disconnect from 127.0.0.1 port 2220:2: no authentication methods enabled
+Disconnected from 127.0.0.1 port 2220
+bandit16@bandit:/tmp$ exit
+logout
+Connection to bandit.labs.overthewire.org closed.
+                                                                                                                   
+┌──(kali㉿25029826)-[~]
+└─$ vim sshkey17.private 
+                                                                                                                   
+┌──(kali㉿25029826)-[~]
+└─$ vim sshkey17.private
+                                                                                                                   
+┌──(kali㉿25029826)-[~]
+└─$ chmod sshkey17.private               
+chmod: missing operand after ‘sshkey17.private’
+Try 'chmod --help' for more information.
+                                                                                                                   
+┌──(kali㉿25029826)-[~]
+└─$ chmod 600 sshkey17.private
+                                                                                                                   
+┌──(kali㉿25029826)-[~]
+└─$ ssh -i sshkey17.private bandit17@bandit.labs.overthewire.org -p 2220                                        
+                         _                     _ _ _   
+                        | |__   __ _ _ __   __| (_) |_ 
+                        | '_ \ / _` | '_ \ / _` | | __|
+                        | |_) | (_| | | | | (_| | | |_ 
+                        |_.__/ \__,_|_| |_|\__,_|_|\__|
+                                                       
+
+                      This is an OverTheWire game server. 
+            More information on http://www.overthewire.org/wargames
+
+backend: gibson-0
+
+      ,----..            ,----,          .---.
+     /   /   \         ,/   .`|         /. ./|
+    /   .     :      ,`   .'  :     .--'.  ' ;
+   .   /   ;.  \   ;    ;     /    /__./ \ : |
+  .   ;   /  ` ; .'___,/    ,' .--'.  '   \' .
+  ;   |  ; \ ; | |    :     | /___/ \ |    ' '
+  |   :  | ; | ' ;    |.';  ; ;   \  \;      :
+  .   |  ' ' ' : `----'  |  |  \   ;  `      |
+  '   ;  \; /  |     '   :  ;   .   \    .\  ;
+   \   \  ',  /      |   |  '    \   \   ' \ |
+    ;   :    /       '   :  |     :   '  |--"
+     \   \ .'        ;   |.'       \   \ ;
+  www. `---` ver     '---' he       '---" ire.org
+
+
+Welcome to OverTheWire!
+
+If you find any problems, please report them to the #wargames channel on
+discord or IRC.
+
+--[ Playing the games ]--
+
+  This machine might hold several wargames.
+  If you are playing "somegame", then:
+
+    * USERNAMES are somegame0, somegame1, ...
+    * Most LEVELS are stored in /somegame/.
+    * PASSWORDS for each level are stored in /etc/somegame_pass/.
+
+  Write-access to homedirectories is disabled. It is advised to create a
+  working directory with a hard-to-guess name in /tmp/.  You can use the
+  command "mktemp -d" in order to generate a random and hard to guess
+  directory in /tmp/.  Read-access to both /tmp/ is disabled and to /proc
+  restricted so that users cannot snoop on eachother. Files and directories
+  with easily guessable or short names will be periodically deleted! The /tmp
+  directory is regularly wiped.
+  Please play nice:
+
+    * don't leave orphan processes running
+    * don't leave exploit-files laying around
+    * don't annoy other players
+    * don't post passwords or spoilers
+    * again, DONT POST SPOILERS!
+      This includes writeups of your solution on your blog or website!
+
+--[ Tips ]--
+
+  This machine has a 64bit processor and many security-features enabled
+  by default, although ASLR has been switched off.  The following
+  compiler flags might be interesting:
+
+    -m32                    compile for 32bit
+    -fno-stack-protector    disable ProPolice
+    -Wl,-z,norelro          disable relro
+
+  In addition, the execstack tool can be used to flag the stack as
+  executable on ELF binaries.
+
+  Finally, network access is limited for most levels by a local
+  firewall.
+
+--[ Tools ]--
+
+ For your convenience, we have installed a few useful tools which you can find
+ in the following locations:
+
+    * gef (https://github.com/hugsy/gef) in /opt/gef/
+    * pwndbg (https://github.com/pwndbg/pwndbg) in /opt/pwndbg/
+    * gdbinit (https://github.com/gdbinit/Gdbinit) in /opt/gdbinit/
+    * pwntools (https://github.com/Gallopsled/pwntools)
+    * radare2 (http://www.radare.org/)
+
+--[ More information ]--
+
+  For more information regarding individual wargames, visit
+  http://www.overthewire.org/wargames/
+
+  For support, questions, or comments, contact us on Discord or IRC.
+
+  Enjoy your stay!
+
+bandit17@bandit:~$ 
+
+This level combines two concepts — port scanning with `nmap` to find the right service, and then using that service to retrieve not a password but an SSH private key for the next level. The key is then saved locally and used to log into bandit17, since connecting from localhost is blocked on the bandit server.
+
+Step-by-Step Process
+
+**Step 1 — Scan the port range with nmap**
+We use `nmap` to scan ports 31000-32000 on localhost to find which ports 
+are open, and what services are running on them:
+```bash
+nmap -sV localhost -p 31000-32000
+```
+The scan reveals 5 open ports:
+- 31046 — echo (plain text, not useful)
+- 31518 — ssl/echo (SSL but just echoes back, not useful)
+- 31691 — echo (plain text, not useful)
+- 31790 — ssl/unknown (SSL with unknown service — this is our target)
+- 31960 — echo (plain text, not useful)
+
+We pick port 31790 because it is the only SSL port running an unknown 
+service — meaning it's likely the password checker.
+
+**Step 2 — Submit the password to port 31790**
+We tried port 31518 first but it just echoed the password back — it's 
+not the right port. Port 31790 is the correct one:
+```bash
+echo "kSkvUpMQ7lBYyCM4GBPvCvT1BfWRy0Dx" | openssl s_client -connect localhost:31790 -quiet
+```
+Instead of a password, the server returns an **RSA private key**.
+
+**Step 3 — Save the private key on your local machine**
+Since connecting from localhost is blocked on the bandit server, we exit 
+and save the key on our local Kali machine:
+```bash
+nano sshkey17.private
+# paste the entire private key, including BEGIN and END lines
+```
+
+**Step 4 — Fix permissions**
+SSH requires private keys to be readable only by the owner:
+```bash
+chmod 600 sshkey17.private
+```
+
+**Step 5 — Log into bandit17 using the private key**
+```bash
+ssh -i sshkey17.private bandit17@bandit.labs.overthewire.org -p 2220
+```
+
+`nmap` (Network Mapper) is a powerful network scanning tool used to discover hosts, open ports, and services running on a network. It is widely used in penetration testing and network administration.
+
+**When to use it:**
+- When you need to find open ports on a machine
+- When you need to identify what services are running
+- When mapping out a network for security auditing
+
+Basic syntax: `nmap <options> <target>`
+
+| Flag | Description |
+|------|-------------|
+| `-sV` | Service version detection — identifies what service and version is running on each port |
+| `-p` | Specify port range e.g. `-p 31000-32000` |
+| `-sS` | SYN scan — fast and stealthy port scan (default) |
+| `-sU` | UDP scan — scans UDP ports instead of TCP |
+| `-O` | OS detection — tries to identify the operating system |
+| `-A` | Aggressive scan — enables OS detection, version detection, script scanning |
+| `-T4` | Set timing template — T4 is fast, T1 is slow and stealthy |
+| `--open` | Only show open ports |
+| `-oN` | Save output to a file |
+
+**How to read nmap output:**
+- `open` — port is active and accepting connections
+- `closed` — port is reachable, but no service is running
+- `filtered` — port is blocked by a firewall
+- `ssl/unknown` — SSL service, but nmap can't identify it specifically
+
+ `nmap` is one of the most important tools in penetration testing.  Always run it with `-sV` to get service information — just knowing  a port is open isn't enough, you need to know what's running on it.
+
+Why port 31790 and not 31518?
+Both ports showed as SSL in the nmap scan, but:
+- **31518** is `ssl/echo` — it simply echoes back whatever you send. 
+  Submitting the password just returns the password to you.
+- **31790** is `ssl/unknown` — nmap couldn't identify it, which hints 
+  it's a custom service. This is the actual password checker that 
+  returns the private key when given the correct password.
+
+In CTFs, `unknown` services are almost always the interesting ones worth investigating. When nmap can't identify a service, it usually means it's something custom-built for the challenge.
+==========================================================================================================================================================================================================================================================================================================================
+
+**Level 17 - Level 18: There are 2 files in the home directory: passwords.old and passwords.new. The password for the next level is in passwords.new and is the only line that has been changed between passwords.old and passwords.new**
+NOTE: If you have solved this level and see ‘Byebye!’ when trying to log into bandit18, this is related to the next level, bandit19
+
+ssh -i sshkey17.private bandit17@bandit.labs.overthewire.org -p 2220
+
+bandit17@bandit:~$ ls
+passwords.new  passwords.old
+bandit17@bandit:~$ diff passwords.old passwords.new
+42c42
+< 390zFj2NETFVZkqYw8UEFdN6h40oGVtT
+---
+> x2gLTTjFwMOhQ8oWNbMN362QKxfRqGlO
+
+We have two files — `passwords.old` and `passwords.new` — each containing 100 lines of passwords. Manually comparing them would be tedious so we use the `diff` command which instantly highlights the one line that is different between the two files. The output shows line 42 was changed, with the old password on the left (`<`) and the new password on the right (`>`). The new password from `passwords.new` is the answer.
+
+(The password for Level 18 is x2gLTTjFwMOhQ8oWNbMN362QKxfRqGlO — that's the line from passwords.new.
+Reading the diff output:
+
+< means the line from passwords.old
+> means the line from passwords.new
+42c42 means line 42 was changed   )
+
+`diff` compares two files line by line and shows what is different between them. It is widely used in programming to compare code changes and in CTFs to spot differences between files.
+  Basic syntax: `diff <file1> <file2>`
+
+**Reading diff output:**
+- `<` — line from the first file
+- `>` — line from the second file  
+- `42c42` — means line 42 in file1 was **c**hanged to line 42 in file2
+- `5d4` — means line 5 was **d**eleted
+- `3a4` — means a line was **a**dded after line 3
+
+| Flag | Description |
+|------|-------------|
+| `-u` | Unified format — shows a few lines of context around changes (used in git diffs) |
+| `-i` | Ignore case differences |
+| `-w` | Ignore all whitespace differences |
+| `-q` | Only report whether files differ, not the details |
+| `-r` | Recursively compare directories |
+
+`diff` is heavily used in real-world development — when you run `git diff` to see code changes before committing, it uses the same underlying diff logic under the hood.
+=================================================================================================================================================================================================================================================================================================
+
+**Level 18 - Level 19: The password for the next level is stored in a file readme in the home directory. Unfortunately, someone has modified .bashrc to log you out when you log in with SSH.**
+
+┌──(kali㉿25029826)-[~]
+└─$ ssh bandit18@bandit.labs.overthewire.org -p 2220 "cat readme"
+                         _                     _ _ _   
+                        | |__   __ _ _ __   __| (_) |_ 
+                        | '_ \ / _` | '_ \ / _` | | __|
+                        | |_) | (_| | | | | (_| | | |_ 
+                        |_.__/ \__,_|_| |_|\__,_|_|\__|
+                                                       
+
+                      This is an OverTheWire game server. 
+            More information on http://www.overthewire.org/wargames
+
+backend: gibson-0
+bandit18@bandit.labs.overthewire.org's password: 
+cGWpMaKXVwDUNgPAVJbWYuGHVn9zl3j8
+
+When logging into bandit18 normally, the `.bashrc` file has been modified to immediately log you out — so you get kicked out before you can run any commands. `.bashrc` is a shell configuration file that runs automatically every time a new bash session starts.
+
+The fix is to bypass the shell entirely by passing the command directly to SSH. Instead of opening an interactive session, SSH executes the command and returns the output before `.bashrc` gets a chance to log you out:
+```bash
+ssh bandit18@bandit.labs.overthewire.org -p 2220 "cat readme"
+```
+
+Key Concept — Running commands directly over SSH
+SSH doesn't always have to open an interactive shell. You can pass a command as an argument, and SSH will execute it on the remote machine and return the output:
+```bash
+ssh user@host -p  "command to run"
+```
+
+This is useful when:
+- A shell is restricted or modified like in this level
+- You want to run a quick command without fully logging in
+- You are automating tasks over SSH in scripts
+
+What is `.bashrc`?
+`.bashrc` is a hidden configuration file in the home directory that runs automatically every time a bash shell starts. It is normally used to set aliases, environment variables, and shell preferences. In this level, it was modified to run `exit` immediately, which kicks you out as soon as you log in.
+
+This is a common technique used in CTFs and real-world security — modifying shell startup files to restrict or trap users. Always check  `.bashrc`, `.bash_profile`, and `.profile` when investigating a restricted shell environment.
+==========================================================================================================================================================================================================================================================================================================================================
+
+** Level 19 - Level 20: To gain access to the next level, you should use the setuid binary in the homedirectory. Execute it without arguments to find out how to use it. The password for this level can be found in the usual place (/etc/bandit_pass), after you have used the setuid binary.**
+
+  ssh bandit19@bandit.labs.overthewire.org -p 2220
+  password: cGWpMaKXVwDUNgPAVJbWYuGHVn9zl3j8
+
+bandit19@bandit:~$ ls
+bandit20-do
+bandit19@bandit:~$ ./bandit20-do cat /etc/bandit_pass/bandit20
+0qXahG8ZjOVMN9Ghs7iOWsCfZyXOUbYO
+bandit19@bandit:~$
+
+Running `ls` reveals a binary file called `bandit20-do`. This is a **setuid binary** — a special type of executable that runs with the permissions of its owner (bandit20) rather than the user executing it (bandit19). This means even though we are logged in as bandit19, any command we run through `bandit20-do` executes with bandit20's privileges.
+
+We use this to read bandit20's password file, which bandit19 normally has no permission to access:
+```bash
+./bandit20-do cat /etc/bandit_pass/bandit20
+```
+
+Breaking down `./bandit20-do cat /etc/bandit_pass/bandit20`
+
+- `./bandit20-do` — runs the setuid binary from the current directory. 
+  The `./` is needed because Linux doesn't look in the current directory 
+  for executables by default, so we have to explicitly point to it.
+
+- `cat` — the command we want to run with bandit20's privileges. We are 
+  passing `cat` as an argument to the binary, telling it "run this command 
+  as bandit20".
+
+- `/etc/bandit_pass/bandit20` — the file we want to read. This is the 
+  full absolute path to bandit20's password file, which is only readable 
+  by bandit20.
+
+So the full command essentially says:
+**"Use bandit20's privileges to run cat on bandit20's password file."**
+
+Think of `bandit20-do` like a key that temporarily unlocks bandit20's 
+permissions — whatever command you pass to it runs as bandit20 instead 
+of bandit19.
+
+What is a Setuid Binary?
+In Linux, every file has an owner and a set of permissions. Normally, when you run a program, it runs with **your** permissions. A setuid (Set User ID) binary is different — it runs with the permissions of the **file's owner** instead.
+
+You can spot a setuid binary by running `ls -la`:
+```bash
+-rwsr-xr-x 1 bandit20 bandit19 ... bandit20-do
+```
+The `s` in the owner's execute position (`rws`) instead of the normal `x.` This is what indicates it is a setuid binary.
+
+Why is this useful (and dangerous)?
+A common real-world example of setuid is the `passwd` command — it needs to write to `/etc/shadow` (a root-owned file) even when run by a normal user. Setuid allows this safely in controlled scenarios.
+
+However, if a setuid binary is poorly written or misconfigured, it can be exploited to gain elevated privileges — this is a very common privilege escalation technique in penetration testing and CTFs.
+
+The `/etc/bandit_pass/` directory
+Each level's password is stored in `/etc/bandit_pass/` but is only readable by the corresponding user. For example:
+- `/etc/bandit_pass/bandit20` is only readable by bandit20
+- `/etc/bandit_pass/bandit19` is only readable by bandit19
+
+This is why we need the setuid binary — it gives us bandit20's permissions just long enough to read that file.
+
+Setuid binaries are a key concept in privilege escalation. In real-world penetration testing, one of the first things you check after gaining access to a system is `find / -perm -4000 2>/dev/null` — this finds all setuid binaries on the system, which are prime targets for privilege escalation.
+=======================================================================================================================================================================================================================================================================================================================================================================
