@@ -111,3 +111,151 @@ UEFI:
 -> Faster boot times
 -> Secure Boot — blocks bootkit malware
 -> Network capabilities for remote boot
+
+Windows Basics:-
+================
+An OS is the essential software that acts as a bridge between the computer's hardware and the user, managing memory, scheduling processes, and handling input/output operations so applications can run seamlessly.
+
+Windows is an operating system developed by Microsoft that provides a user-friendly environment for managing files, running software, and connecting to the internet. It is one of the most widely used OS platforms in the world — across homes, businesses, schools, and government organizations.
+
+4 Key Principles of Windows OS:
+--------------------------------
+-> User-friendly interface - GUI with icons, a Start menu, and easy navigation — accessible even without technical skills.
+-> Compatibility - Supports a vast range of software and hardware, from printers to specialized industrial equipment.
+-> Security - Windows Defender, built-in firewall, UAC (User Account Control), and regular security updates.
+-> Networking - Built-in support for internet, local networks, file sharing, and resource management.
+
+Windows User Interface (UI):-
+------------------------------
+The Windows UI is the visual layout that allows users to interact with the OS through graphical elements rather than text commands. It has evolved from a basic GUI in Windows 1.0 to a sophisticated, touch-friendly interface in Windows 11.
+=> Start Menu — Central hub for accessing apps, settings, and files. Has pinned apps, a full program list, and a search bar.
+=> Taskbar - Bottom of screen. Shows open apps, system tray icons, and the clock. Enables quick task switching.
+=> Desktop - Main workspace area. Place icons, files, and shortcuts. Customizable background wallpaper.
+=> File Explorer - The file management tool for navigating, organizing, and managing files and folders on the system.
+
+Filesystems:-
+-------------
+A filesystem is the method and data structure an OS uses to manage files on a disk — defining how data is stored, organized, and accessed. It enables creating, deleting, reading, and writing files while ensuring integrity and security.
+
+| Filesystem | Used By | Key Details |
+|------------|---------|-------------|
+| **NTFS** | Windows (primary) | Supports large files, file permissions, and journaling for data recovery. Best for internal Windows drives. |
+| **FAT32** | USB drives, older devices | Wide compatibility across OS platforms. Max file size: 4 GB. Good for small removable storage. |
+| **exFAT** | Large external drives | No 4 GB file limit. Cross-platform (Windows + Mac). Best for large removable drives used on multiple machines. |
+| **ext4** | Linux | High performance, reliability, supports large files and volumes. |
+| **APFS** | macOS / iOS | Strong encryption, space sharing, snapshots for data backup. Mac-only. |
+
+Quick rule: NTFS for Windows internal drives, exFAT for cross-platform external drives. APFS for Mac-only drives
+
+File Management in Windows:
+---------------------------
+File management involves organizing, storing, and accessing files and directories. The primary tool is File Explorer, which provides a GUI for navigating the file system.
+=> Navigation Pane - Quickly access drives, libraries, and folders from a sidebar panel.
+=> Address Bar - Shows current path. You can type a path directly to jump to any location.
+=> Search Bar - Find files and folders instantly using keywords.
+=> View Options - Switch between list, details, and thumbnail layouts for different views.
+
+File and Folder Operations:
+---------------------------
+=> Create - New files and folders directly within File Explorer.
+=> Rename - Rename files/folders for better organization.
+=> Move/Copy - Drag-and-drop or cut and paste between locations.
+=> Delete - Send to Recycle Bin (recoverable) or permanently delete.
+
+Properties ==> right-click -> Properties: view type, size, permissions, metadata
+
+
+Linux Basics:
+=============
+Linux is an open-source operating system based on the Unix architecture, designed to be flexible, secure, and efficient. Developed by Linus Torvalds in 1991 as a personal project, it grew into a global collaboration. Inspired initially by the MINIX OS, it has since evolved into hundreds of distributions (distros) for every use case imaginable — from servers to mobile devices to embedded systems.
+
+4 core principles of Linux:-
+----------------------------
+=> Open Source & Freedom - Licensed under the GNU GPL — anyone can freely use, modify, and distribute the source code. Promotes collaboration and innovation.
+=> Modularity & Simplicity - Built with a modular architecture where each component (tool, utility, or app) does one specific thing well.
+=> Portability & Flexibility - Runs on a wide range of hardware — personal computers, supercomputers, servers, and embedded systems.
+=> Community & Collaboration - Developed and maintained by a global community — contributing code, fixing bugs, and providing support.
+
+Linux Distributions:-
+----------------------
+Different Linux distributions are tailored for specific uses — from general purpose to highly specialized tasks.
+=> Ubuntu - User-friendly. Most popular for beginners. Great starting point for learning Linux.
+=> Fedora - Cutting-edge features. Focuses on new technology. Sponsored by Red Hat.
+=> CentOS - Stability and reliability. Commonly used in enterprise server environments.
+=> Kali Linux - Built for offensive security and penetration testing. The go-to distro for this course.
+
+Desktop Environments (GUI):
+---------------------------
+At its core Linux is a command-line OS. However, Desktop Environments (DEs) add a graphical layer on top. DEs are separate from the distro — you can swap them independently.
+=> GNOME - Intuitive and modern design. Default on Ubuntu and Fedora.
+=> KDE Plasma - Highly customizable and feature-rich. Windows-like feel.
+=> XFCE - Lightweight and efficient. Suitable for older or low-resource hardware.
+
+Linux File System Structure:-
+------------------------------
+Most Linux systems use the Ext4 filesystem. One of Linux's core philosophies is: everything is a file — documents, hard drives, modems, keyboards, printers, and even inter-process and network communications.
+
+/ Root — top-level directory, everything branches from here
+├── /home Personal directories for each user (e.g. /home/kali)
+├── /bin Essential user binaries / executables (ls, cp, mv…)
+├── /etc System-wide configuration files and settings
+├── /var Variable files — logs, databases, caches
+├── /tmp Temporary files, cleared on reboot
+├── /usr User programs and utilities
+└── /root Home directory of the root (admin) user
+
+Linux File Permissions:-
+------------------------
+Every file in Linux is secured by users and groups. Permissions are split into 3 types and applied to 3 groups.
+
+Example: -rw-r----- root shadow
+
+-                        rw-                        r--                                ---
+Special        |        Owner        |            Owner Group        |                Other Groups
+
+Symbol	Permission	Numeric Value	Meaning
+r	Read	              4	        View file contents or list directory
+w	Write	              2	        Modify or delete file / directory
+x	Execute	              1	        Run as a program / enter directory
+-	No permission	      0	        Access denied for that action
+
+Numeric Example: -rw-r----- = 640
+Owner: rw- = 4+2+0 = 6  |  Group: r-- = 4+0+0 = 4  |  Others: --- = 0+0+0 = 0
+
+The Linux Terminal:-
+---------------------
+The Linux Terminal (also called CLI or shell) is a text-based interface for interacting directly with the OS. It is the primary tool for offensive security work. The most common shell is Bash (Bourne Again Shell). Others include Zsh, Ksh, and Fish.
+=> Efficient Navigation - Quick access to files and directories without a GUI.
+=> System Administration - Directly manage users, permissions, and running processes.
+=> Remote Access - Securely manage remote Linux systems via SSH (Secure Shell).
+=> Extensibility - Write custom scripts and aliases to automate complex tasks.
+
+Essential Commands to Master:
+------------------------------
+=> pwd - Print current working directory
+=> ls - List files and directories at current location.
+=> cd - Change the current directory.
+=> man - Display manual pages for any command.
+=> cp - Copy files and directories.
+=> mv - Move or rename files and directories.
+=> rm - Remove files and directories.
+=> chmod - Change file permissions (e.g. chmod 640).
+=> chown - Change file owner and group.
+=> ls -l - List files with full permission details
+
+Package Management:-
+---------------------
+In Linux, software is managed through package managers — systems for installing, updating, and removing applications while handling dependencies automatically.
+
+APT — Advanced Package Tool (Debian-based: Ubuntu, Kali):-
+-> apt update - Refresh the list of available packages.
+-> apt install <package> - Install a new package.
+-> apt remove <package> - Remove an installed package.
+
+YUM / DNF (Red Hat-based: CentOS, Fedora):-
+-> yum install <package> - Install a package.
+-> dnf install <package> - Install a package (newer alternative to YUM).
+-> yum remove <package> - Remove a package.
+
+Windows vs Linux software compatibility:-
+Some apps are cross-platform (VS Code, Chrome, Audacity, 7-Zip). But natively, Windows uses .exe / .msi while Linux uses .deb (Debian) or .rpm (Red Hat). They are not directly compatible.
