@@ -1588,3 +1588,773 @@ This is why we need the setuid binary — it gives us bandit20's permissions jus
 
 Setuid binaries are a key concept in privilege escalation. In real-world penetration testing, one of the first things you check after gaining access to a system is `find / -perm -4000 2>/dev/null` — this finds all setuid binaries on the system, which are prime targets for privilege escalation.
 =======================================================================================================================================================================================================================================================================================================================================================================
+
+**Level 20 - Level 21: There is a setuid binary in the home directory that does the following: it makes a connection to localhost on the port you specify as a commandline argument. It then reads a line of text from the connection and compares it to the password in the previous level (bandit20). If the password is correct, it will transmit the password for the next level (bandit21).
+NOTE: Try connecting to your own network daemon to see if it works as you think
+
+ ssh bandit20@bandit.labs.overthewire.org -p 2220 
+ password: 0qXahG8ZjOVMN9Ghs7iOWsCfZyXOUbYO
+
+Terminal 1:
+-----------
+bandit20@bandit:~$ ls
+suconnect
+bandit20@bandit:~$ nc -lp 1234
+
+Terminal 2:
+-----------
+bandit20@bandit:~$ ls
+suconnect
+bandit20@bandit:~$ ./suconnect
+Usage: ./suconnect <portnumber>
+This program will connect to the given port on localhost using TCP. If it receives the correct password from the other side, the next password is transmitted back.
+bandit20@bandit:~$ ./suconnect 1234
+
+Back to Terminal 1:
+-------------------
+0qXahG8ZjOVMN9Ghs7iOWsCfZyXOUbYO
+EeoULMCra2q0dSkYj561DX7s1CpBuOBt
+bandit20@bandit:~$
+
+Again, back to Terminal 2:
+--------------------------
+Read: 0qXahG8ZjOVMN9Ghs7iOWsCfZyXOUbYO
+Password matches, sending next password
+bandit20@bandit:~$ 
+
+This level introduces the concept of network communication between two processes on the same machine. There is a setuid binary called `suconnect` that connects to a port on localhost, reads a password, and if correct, sends back the next level's password.
+The key here is that both `nc` and `suconnect` must run on the **bandit server itself** — not on your local machine. We need two SSH sessions into bandit20 running simultaneously.
+
+Step-by-Step Process
+
+**Terminal 1 — Start a listener on the bandit server:**
+```bash
+nc -lp 1234
+```
+This opens port 1234 and waits for an incoming connection.
+
+**Terminal 2 — Run suconnect on the bandit server:**
+```bash
+./suconnect 1234
+```
+This connects to port 1234 on localhost and waits to receive a password.
+
+**Back in Terminal 1 — Send the current password:**
+```bash
+0qXahG8ZjOVMN9Ghs7iOWsCfZyXOUbYO
+```
+`suconnect` reads it, verifies it, and sends back the next password 
+which appears in Terminal 1.
+
+What is a Setuid Binary?
+`suconnect` is a **setuid** binary — meaning it runs with the permissions of its owner (bandit21) rather than the user running it (bandit20). This is what allows it to access and send bandit21's password even though we are logged in as bandit20.
+
+You can identify setuid binaries with `ls -la` — they show an `s` in 
+the permissions instead of `x`:
+-rwsr-x--- 1 bandit21 bandit20 ...
+
+The order matters — always start the `nc` listener first before running `suconnect`. If the listener isn't running when `suconnect` tries to connect, it will immediately return "Could not connect".
+============================================================================================================================================================================================================================================================================================
+
+**Level 21 - Level 22: A program is running automatically at regular intervals from cron, the time-based job scheduler. Look in /etc/cron.d/ for the configuration and see what command is being executed.
+
+ssh bandit21@bandit.labs.overthewire.org -p 2220
+password: EeoULMCra2q0dSkYj561DX7s1CpBuOBt
+
+bandit21@bandit:~$ ls /etc/cron.d/
+behemoth4_cleanup  cronjob_bandit22  cronjob_bandit24  leviathan5_cleanup    otw-tmp-dir
+clean_tmp          cronjob_bandit23  e2scrub_all       manpage3_resetpw_job  sysstat
+bandit21@bandit:~$ cat /etc/cron.d/cronjob_bandit22
+@reboot bandit22 /usr/bin/cronjob_bandit22.sh &> /dev/null
+* * * * * bandit22 /usr/bin/cronjob_bandit22.sh &> /dev/null
+bandit21@bandit:~$ cat /usr/bin/cronjob_bandit22.sh
+#!/bin/bash
+chmod 644 /tmp/t7O6lds9S0RqQh9aMcz6ShpAoZKF7fgv
+cat /etc/bandit_pass/bandit22 > /tmp/t7O6lds9S0RqQh9aMcz6ShpAoZKF7fgv
+bandit21@bandit:~$ cat /tmp/t7O6lds9S0RqQh9aMcz6ShpAoZKF7fgv
+tRae0UfB9v0UzbCdn9cY0gQnds9GF58Q
+
+
+#### Step 1 — Looking at the Cron Jobs
+```bash
+ls /etc/cron.d/
+```
+This lists all the scheduled tasks (cron jobs) on the system. We can see 
+several files but the one we care about is `cronjob_bandit22` since we 
+are trying to get bandit22's password.
+
+---
+
+#### Step 2 — Reading the Cron Job File
+```bash
+cat /etc/cron.d/cronjob_bandit22
+```
+Output:
+@reboot bandit22 /usr/bin/cronjob_bandit22.sh &> /dev/null
+
+. . . . . bandit22 /usr/bin/cronjob_bandit22.sh &> /dev/null
+
+Let's break this down piece by piece:
+
+**`@reboot`** — runs the script once every time the system starts up.
+
+**`* * * * *`** — this is the cron time format. Five `*` means the task 
+runs every minute, every hour, every day, every month, every day of the 
+week — in other words, every single minute non-stop.
+
+**`bandit22`** — this is the user the script runs as. So the script 
+runs with bandit22's permissions, meaning it can read bandit22's password.
+
+**`/usr/bin/cronjob_bandit22.sh`** — this is the actual script being run.
+
+**`&> /dev/null`** — this redirects ALL output (both normal output and 
+errors) to `/dev/null` which is basically a black hole in Linux — anything 
+sent there is silently discarded. This is why we don't see any output from 
+the cron job running.
+
+---
+
+#### Step 3 — Reading the Script
+```bash
+cat /usr/bin/cronjob_bandit22.sh
+```
+Output:
+```bash
+#!/bin/bash
+chmod 644 /tmp/t7O6lds9S0RqQh9aMcz6ShpAoZKF7fgv
+cat /etc/bandit_pass/bandit22 > /tmp/t7O6lds9S0RqQh9aMcz6ShpAoZKF7fgv
+```
+Let's break this down line by line:
+
+**`#!/bin/bash`** — this is called a "shebang" line. It tells the system 
+to run this script using bash. Every bash script starts with this line.
+
+**`chmod 644 /tmp/t7O6lds9S0RqQh9aMcz6ShpAoZKF7fgv`** — this sets the 
+permissions of the temp file to `644` which means:
+- Owner (bandit22) can read and write
+- Everyone else (including us as bandit21) can **read** it
+This is the crucial part — without this line we wouldn't be able to read 
+the file.
+
+**`cat /etc/bandit_pass/bandit22 > /tmp/t7O6lds9S0RqQh9aMcz6ShpAoZKF7fgv`**
+— this reads bandit22's password from `/etc/bandit_pass/bandit22` and 
+writes it into the temp file in `/tmp`. The `>` redirects the output 
+into the file instead of printing it to the screen.
+
+So every minute this script:
+1. Makes the temp file readable by everyone
+2. Writes bandit22's password into it
+
+---
+
+#### Step 4 — Reading the Password File
+```bash
+cat /tmp/t7O6lds9S0RqQh9aMcz6ShpAoZKF7fgv
+```
+Since the cron job has already run and made the file world-readable, we 
+can simply read it to get the password.
+
+---
+
+### What is a Cron Job?
+A cron job is a scheduled task that runs automatically at specified time 
+intervals without any user interaction. Think of it like setting an alarm 
+— you set it once and it goes off automatically at the time you specified. 
+Cron jobs are used for:
+- Running backups automatically at night
+- Cleaning up temp files regularly
+- Sending scheduled emails or reports
+- Updating databases periodically
+
+### Cron Time Format
+The five `*` symbols represent time intervals in this order:
+
+command
+│ │ │ │ │
+│ │ │ │ └── Day of week (0-7, Sunday = 0 or 7)
+│ │ │ └──── Month (1-12)
+│ │ └────── Day of month (1-31)
+│ └──────── Hour (0-23)
+└────────── Minute (0-59)
+
+Some examples:
+| Schedule | Meaning |
+|----------|---------|
+| `* * * * *` | Every minute |
+| `0 * * * *` | Every hour at minute 0 |
+| `0 0 * * *` | Every day at midnight |
+| `0 0 * * 0` | Every Sunday at midnight |
+| `*/5 * * * *` | Every 5 minutes |
+| `@reboot` | Once at system startup |
+
+### Where to Find Cron Jobs
+| Location | Description |
+|----------|-------------|
+| `/etc/cron.d/` | System-wide cron jobs stored as separate files |
+| `/etc/crontab` | Main system crontab file |
+| `crontab -l` | List current user's personal cron jobs |
+| `/var/spool/cron/` | Per-user cron job files |
+
+### What is `/dev/null`?
+`/dev/null` is a special file in Linux that discards everything written 
+to it. It is often called the "black hole" of Linux. It is used when 
+you want to run a command silently without showing any output or errors.
+- `> /dev/null` — discards standard output
+- `2> /dev/null` — discards error messages
+- `&> /dev/null` — discards both output and errors
+
+### What is `/etc/bandit_pass/`?
+This is a directory on the bandit server that stores the passwords for 
+each level. Each file is named after the user and contains their password:
+- `/etc/bandit_pass/bandit22` contains bandit22's password
+- Each file is only readable by that specific user
+- This is why the cron job running as bandit22 can read it but we as 
+  bandit21 cannot read it directly.
+
+In penetration testing, cron jobs are a very common privilege escalation vector. If a script that runs as a higher privileged user (like root) is world-writable, an attacker can modify it to run their own malicious commands with those elevated privileges. Always check cron jobs when looking for ways to escalate privileges on a system.
+==========================================================================================================================================================================================================================================================================================================================================================================
+
+**Level 22 - Level 23: A program is running automatically at regular intervals from cron, the time-based job scheduler. Look in /etc/cron.d/ for the configuration and see what command is being executed.**
+NOTE: Looking at shell scripts written by other people is a very useful skill. The script for this level is intentionally made easy to read. If you are having problems understanding what it does, try executing it to see the debug information it prints.
+
+ssh bandit22@bandit.labs.overthewire.org -p 2220
+password: tRae0UfB9v0UzbCdn9cY0gQnds9GF58Q
+
+bandit22@bandit:~$ ls /etc/cron.d/
+behemoth4_cleanup  cronjob_bandit22  cronjob_bandit24  leviathan5_cleanup    otw-tmp-dir
+clean_tmp          cronjob_bandit23  e2scrub_all       manpage3_resetpw_job  sysstat
+bandit22@bandit:~$ cat cronjob_bandit23
+cat: cronjob_bandit23: No such file or directory
+bandit22@bandit:~$ cat /etc/cron.d/cronjob_bandit23
+@reboot bandit23 /usr/bin/cronjob_bandit23.sh  &> /dev/null
+* * * * * bandit23 /usr/bin/cronjob_bandit23.sh  &> /dev/null
+bandit22@bandit:~$ cat /usr/bin/cronjob_bandit23.sh
+#!/bin/bash
+
+myname=$(whoami)
+mytarget=$(echo I am user $myname | md5sum | cut -d ' ' -f 1)
+
+echo "Copying passwordfile /etc/bandit_pass/$myname to /tmp/$mytarget"
+
+cat /etc/bandit_pass/$myname > /tmp/$mytarget
+bandit22@bandit:~$ echo I am user bandit23 | md5sum | cut -d ' ' -f 1
+8ca319486bfbbc3663ea0fbe81326349
+bandit22@bandit:~$ cat /tmp/8ca319486bfbbc3663ea0fbe81326349
+0Zf11ioIjMVN551jX3CmStKLYqjk54Ga
+
+### Explanation
+
+#### Step 1 — Listing the Cron Jobs
+```bash
+ls /etc/cron.d/
+```
+Just like the previous level, we start by listing all the cron jobs on 
+the system. We can see `cronjob_bandit23` which is the one we need.
+
+---
+
+#### Step 2 — Common Mistake
+```bash
+cat cronjob_bandit23
+```
+Output:
+cat: cronjob_bandit23: No such file or directory
+
+This is a common mistake — we tried to read the file without specifying 
+the full path. The file is located in `/etc/cron.d/` not in the current 
+directory. Always use the full path:
+```bash
+cat /etc/cron.d/cronjob_bandit23
+```
+
+---
+
+#### Step 3 — Reading the Cron Job File
+```bash
+cat /etc/cron.d/cronjob_bandit23
+```
+Output:
+@reboot bandit23 /usr/bin/cronjob_bandit23.sh &> /dev/null
+
+. . . . . bandit23 /usr/bin/cronjob_bandit23.sh &> /dev/null
+
+This is identical in structure to the previous level:
+- `@reboot` — runs once when the system starts
+- `* * * * *` — runs every minute
+- `bandit23` — runs with bandit23's permissions
+- `/usr/bin/cronjob_bandit23.sh` — the script being executed
+- `&> /dev/null` — all output is silently discarded
+
+---
+
+#### Step 4 — Reading and Understanding the Script
+```bash
+cat /usr/bin/cronjob_bandit23.sh
+```
+Output:
+```bash
+#!/bin/bash
+myname=$(whoami)
+mytarget=$(echo I am user $myname | md5sum | cut -d ' ' -f 1)
+echo "Copying passwordfile /etc/bandit_pass/$myname to /tmp/$mytarget"
+cat /etc/bandit_pass/$myname > /tmp/$mytarget
+```
+This script is more complex than the previous level. Let's break it down 
+line by line:
+
+**`#!/bin/bash`** — the shebang line, tells the system to run this as 
+a bash script.
+
+**`myname=$(whoami)`** — `whoami` is a command that prints the current 
+user's username. The `$()` syntax means "run this command and store the 
+result in a variable". So when the cron job runs as bandit23, `myname` 
+will be set to `bandit23`. When we run it ourselves as bandit22, `myname` 
+would be `bandit22`.
+
+**`mytarget=$(echo I am user $myname | md5sum | cut -d ' ' -f 1)`** — 
+this is a chain of three commands piped together:
+- `echo I am user $myname` — prints the string "I am user bandit23" 
+  (when running as bandit23)
+- `md5sum` — takes that string and generates an MD5 hash — a fixed 
+  length string of 32 characters that uniquely represents the input. 
+  Even a tiny change in input produces a completely different hash.
+- `cut -d ' ' -f 1` — `md5sum` outputs the hash followed by a space 
+  and a dash e.g. `8ca319486bfbbc3663ea0fbe81326349  -`. The `cut` 
+  command splits the output by space (`-d ' '`) and takes only the 
+  first field (`-f 1`) — just the hash itself, without the trailing 
+  space and dash.
+
+So `mytarget` ends up being the MD5 hash of "I am user bandit23".
+
+**`echo "Copying passwordfile /etc/bandit_pass/$myname to /tmp/$mytarget"`**
+— just prints an informational message showing where it's copying the 
+password to. Since the cron job redirects all output to `/dev/null` we 
+never see this message when it runs automatically.
+
+**`cat /etc/bandit_pass/$myname > /tmp/$mytarget`** — reads bandit23's 
+password and writes it to `/tmp/<md5hash>`.
+
+---
+
+#### Step 5 — Simulating the Script as bandit23
+Since the cron job runs as bandit23, `whoami` returns `bandit23`. We 
+can't run the script ourselves as bandit23, but we can manually simulate 
+what it does by hardcoding `bandit23` in the command:
+```bash
+echo I am user bandit23 | md5sum | cut -d ' ' -f 1
+```
+Output:
+8ca319486bfbbc3663ea0fbe81326349
+
+This gives us the exact filename the cron job writes the password to 
+in `/tmp`.
+
+---
+
+#### Step 6 — Reading the Password
+```bash
+cat /tmp/8ca319486bfbbc3663ea0fbe81326349
+```
+Since the cron job has already run as bandit23 and written the password 
+to this file, we simply read it to get the next password.
+
+---
+
+### Commands Used
+
+**`whoami`** — prints the username of the currently logged in user.
+```bash
+whoami
+# Output: bandit22
+```
+
+**`md5sum`** — generates an MD5 hash of a file or input string. MD5 is 
+a hashing algorithm that takes any input and produces a fixed 32-character 
+hexadecimal string. The same input always produces the same hash, but 
+even a tiny change produces a completely different hash.
+```bash
+echo "hello" | md5sum
+# Output: b1946ac92492d2347c6235b4d2611184  -
+```
+
+**`cut`** — extracts specific sections from each line of input.
+Basic syntax: `cut <options>`
+
+| Flag | Description |
+|------|-------------|
+| `-d` | Delimiter — the character to split by e.g. `-d ' '` splits by space |
+| `-f` | Field — which section to extract e.g. `-f 1` gets the first section |
+| `-c` | Extract by character position e.g. `-c 1-5` gets first 5 characters |
+
+**`$()`** — Command substitution. Runs a command and uses its output 
+as a value. For example:
+```bash
+myname=$(whoami)
+echo $myname
+# Output: bandit22
+```
+This is different from just running `whoami` — it captures the output 
+and stores it in a variable for later use.
+
+The key insight in this level is understanding that the cron job runs as bandit23, not as us. So we had to manually simulate what the script does when running as bandit23 by replacing `whoami` with the hardcoded username `bandit23`. This technique of reading and understanding scripts to predict their behaviour is a core skill in penetration testing.
+==============================================================================================================================================================================================================================================================================================================================================================================================================
+
+** Level 23 - Level 24: A program is running automatically at regular intervals from cron, the time-based job scheduler. Look in /etc/cron.d/ for the configuration and see what command is being executed.**
+NOTE: This level requires you to create your own first shell script. This is a very big step, and you should be proud of yourself when you beat this level!
+NOTE 2: Keep in mind that your shell script is removed once executed, so you may want to keep a copy around…
+
+ssh bandit23@bandit.labs.overthewire.org -p 2220
+password: 0Zf11ioIjMVN551jX3CmStKLYqjk54Ga
+
+bandit23@bandit:~$ ls /etc/cron.d/
+behemoth4_cleanup  cronjob_bandit22  cronjob_bandit24  leviathan5_cleanup    otw-tmp-dir
+clean_tmp          cronjob_bandit23  e2scrub_all       manpage3_resetpw_job  sysstat
+bandit23@bandit:~$ cat /etc/cron.d/cronjob_bandit24
+@reboot bandit24 /usr/bin/cronjob_bandit24.sh &> /dev/null
+* * * * * bandit24 /usr/bin/cronjob_bandit24.sh &> /dev/null
+bandit23@bandit:~$ cat /usr/bin/cronjob_bandit24.sh
+#!/bin/bash
+
+shopt -s nullglob
+
+myname=$(whoami)
+
+cd /var/spool/"$myname"/foo || exit 
+echo "Executing and deleting all scripts in /var/spool/$myname/foo:"
+for i in * .*;
+do
+    if [ "$i" != "." ] && [ "$i" != ".." ];
+    then
+        echo "Handling $i"
+        owner="$(stat --format "%U" "./$i")"
+        if [ "${owner}" = "bandit23" ] && [ -f "$i" ]; then
+            timeout -s 9 60 "./$i"
+        fi
+        rm -rf "./$i"
+    fi
+donebandit23@bandit:~$ mkdir /tmp/mydir24
+mkdir: cannot create directory ‘/tmp/mydir24’: File exists
+bandit23@bandit:~$ cd /tmp
+bandit23@bandit:/tmp$ mkdir mydir24
+mkdir: cannot create directory ‘mydir24’: File exists
+bandit23@bandit:/tmp$ vim /tmp/mydir24/getpass.sh
+bandit23@bandit:/tmp$ chmod +x /tmp/mydir24/getpass.sh
+bandit23@bandit:/tmp$ chmod 777 /tmp/mydir24
+bandit23@bandit:/tmp$ cp /tmp/mydir24/getpass.sh /var/spool/bandit24/foo/
+bandit23@bandit:/tmp$ cat /tmp/mydir24/password.txt
+gb8KRRCsshuZXI0tUuR6ypOFjiZbf3G8
+
+#### Key Insight
+The cron job runs as bandit24 and executes any script owned by bandit23 
+placed in `/var/spool/bandit24/foo/`, then deletes it. Since we are 
+logged in as bandit23, any script we create will be owned by bandit23. 
+So our plan is to:
+1. Write a script that reads bandit24's password and saves it somewhere  we can read
+2. Place it in `/var/spool/bandit24/foo/`
+3. Wait for the cron job to run it as bandit24
+4. Read the saved password
+
+This works because the cron job runs as bandit24, which means it has permission to read `/etc/bandit_pass/bandit24` — something we as bandit23 cannot do directly.
+
+#### Step 1 — Reading the Cron Job File
+```bash
+cat /etc/cron.d/cronjob_bandit24
+```
+Output:
+@reboot bandit24 /usr/bin/cronjob_bandit24.sh &> /dev/null
+
+. . . . .  bandit24 /usr/bin/cronjob_bandit24.sh &> /dev/null
+
+Same structure as previous levels:
+- `* * * * *` — runs every minute
+- `bandit24` — runs with bandit24's permissions
+- `&> /dev/null` — all output silently discarded
+
+---
+
+#### Step 2 — Understanding the Cron Job Script
+```bash
+cat /usr/bin/cronjob_bandit24.sh
+```
+Output:
+```bash
+#!/bin/bash
+shopt -s nullglob
+myname=$(whoami)
+cd /var/spool/"$myname"/foo || exit
+echo "Executing and deleting all scripts in /var/spool/$myname/foo:"
+for i in * .*;
+do
+    if [ "$i" != "." ] && [ "$i" != ".." ];
+    then
+        echo "Handling $i"
+        owner="$(stat --format "%U" "./$i")"
+        if [ "${owner}" = "bandit23" ] && [ -f "$i" ]; then
+            timeout -s 9 60 "./$i"
+        fi
+        rm -rf "./$i"
+    fi
+done
+```
+
+Let's break this down line by line:
+
+**`shopt -s nullglob`** — a shell option that makes wildcard patterns 
+return nothing if no files match, instead of returning the pattern 
+itself. Prevents errors when the directory is empty.
+
+**`myname=$(whoami)`** — stores the current username in `myname`. Since 
+the cron job runs as bandit24, `myname` will be `bandit24`.
+
+**`cd /var/spool/"$myname"/foo || exit`** — changes into 
+`/var/spool/bandit24/foo`. The `|| exit` means "if the cd fails, exit 
+the script". This is a safety check to prevent the script from running 
+in the wrong directory.
+
+**`for i in * .*;`** — a loop that goes through every file in the 
+current directory. `*` matches all visible files and `.*` matches all 
+hidden files (files starting with `.`).
+
+**`if [ "$i" != "." ] && [ "$i" != ".." ]`** — skips the special 
+directory entries `.` (current directory) and `..` (parent directory) 
+which are always present in every directory.
+
+**`owner="$(stat --format "%U" "./$i")`** — gets the owner's username 
+of each file using `stat`. Stores it in the `owner` variable.
+
+**`if [ "${owner}" = "bandit23" ] && [ -f "$i" ]`** — this is the critical check. The script only executes files that are:
+- Owned by `bandit23` — that's us!
+- Regular files (`-f` checks this, not a directory or special file)
+
+This is what allows us to plant our own script — since we are bandit23, any file we create is automatically owned by bandit23.
+
+**`timeout -s 9 60 "./$i"`** — executes the script with a maximum time 
+limit of 60 seconds. If it takes longer, it gets force killed with 
+signal 9 (SIGKILL). This prevents infinite loops or hanging scripts.
+
+**`rm -rf "./$i"`** — deletes the script after running it. This is why 
+we must save the password output to a separate file — our script gets 
+deleted after execution but the output file remains.
+
+#### Step 3 — Creating our Working Directory
+```bash
+mkdir /tmp/mydir24
+```
+We create our own directory in `/tmp` to store our script and to receive 
+the password output. We use `/tmp` because it is the only place we have 
+write access to as bandit23.
+
+#### Step 4 — Writing our Script
+```bash
+nano /tmp/mydir24/getpass.sh
+```
+Content:
+```bash
+#!/bin/bash
+cat /etc/bandit_pass/bandit24 > /tmp/mydir24/password.txt
+```
+This script reads bandit24's password from `/etc/bandit_pass/bandit24` and writes it to `password.txt` in our temp directory. When the cron job runs this as bandit24, it will have permission to read bandit24's password — something we can't do directly as bandit23.
+
+#### Step 5 — Setting the Correct Permissions
+```bash
+chmod +x /tmp/mydir24/getpass.sh
+chmod 777 /tmp/mydir24
+```
+
+**`chmod +x /tmp/mydir24/getpass.sh`** — makes our script executable. 
+Without the execute permission the cron job cannot run it — it would 
+just be treated as a text file.
+
+**`chmod 777 /tmp/mydir24`** — gives everyone full read, write and 
+execute permissions on our directory. This is critical because:
+- The cron job runs as bandit24
+- When it executes our script, the script tries to write `password.txt` 
+  into our directory
+- If bandit24 doesn't have write permission to our directory, the 
+  script will fail silently and `password.txt` will never be created
+- `777` means everyone including bandit24 can write to our directory
+
+#### Step 6 — Placing our Script in the Cron Directory
+```bash
+cp /tmp/mydir24/getpass.sh /var/spool/bandit24/foo/
+```
+We copy our script into `/var/spool/bandit24/foo/` — the directory the 
+cron job monitors every minute. Since we are copying as bandit23, the 
+file will be owned by bandit23, which is exactly what the cron job 
+checks for before executing.
+
+#### Step 7 — Waiting for the Cron Job
+Since `* * * * *` means every minute, we wait up to one minute for the 
+cron job to:
+1. Detect our script in `/var/spool/bandit24/foo/`
+2. Verify it is owned by bandit23 ✓
+3. Verify it is a regular file ✓
+4. Execute it as bandit24
+5. Our script reads bandit24's password and saves it to `password.txt`
+6. Delete our script from the cron directory
+
+#### Step 8 — Reading the Password
+```bash
+cat /tmp/mydir24/password.txt
+```
+The password has been written to our temp file by the cron job!
+
+### Commands Used
+
+**`shopt`** — sets shell options to change bash behaviour.
+
+| Flag | Description |
+|------|-------------|
+| `-s` | Enable (set) a shell option |
+| `-u` | Disable (unset) a shell option |
+| `nullglob` | Makes unmatched wildcards return empty instead of the pattern |
+
+**`stat`** — displays detailed information about a file.
+Basic syntax: `stat <file>`
+
+| Flag | Description |
+|------|-------------|
+| `--format "%U"` | Show only the owner username |
+| `--format "%G"` | Show only the group name |
+| `--format "%a"` | Show permissions in octal format |
+| `--format "%s"` | Show file size in bytes |
+
+**`timeout`** — runs a command with a time limit.
+Basic syntax: `timeout <duration> <command>`
+
+| Flag | Description |
+|------|-------------|
+| `-s 9` | Send signal 9 (SIGKILL) — force kills the process when time runs out |
+| `-s 15` | Send signal 15 (SIGTERM) — graceful termination (default) |
+
+**`for` loop in bash** — repeats commands for each item in a list.
+Basic syntax:
+```bash
+for variable in list;
+do
+    commands
+done
+```
+
+**`if` statement in bash** — runs commands only if a condition is true.
+Basic syntax:
+```bash
+if [ condition ];
+then
+    commands
+fi
+```
+
+Common conditions:
+| Condition | Meaning |
+|-----------|---------|
+| `[ -f file ]` | True if file exists and is a regular file |
+| `[ -d dir ]` | True if directory exists |
+| `[ "$a" = "$b" ]` | True if strings are equal |
+| `[ "$a" != "$b" ]` | True if strings are NOT equal |
+| `&&` | AND — both conditions must be true |
+| `\|\|` | OR — at least one condition must be true |
+
+This level demonstrates a classic privilege escalation technique called **cron job hijacking**. By placing a script in a directory that a higher-privileged cron job monitors and executes, we can run commands with that higher user's privileges. In real penetration testing, always check cron jobs and the directories they interact with — world-writable directories monitored by privileged cron jobs are a goldmine for privilege escalation.
+======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+
+**Level 24 - Level 25: A daemon is listening on port 30002 and will give you the password for bandit25 if given the password for bandit24 and a secret numeric 4-digit pincode. There is no way to retrieve the pincode except by going through all of the 10000 combinations, called brute-forcing.You do not need to create new connections each time.**
+
+ssh bandit24@bandit.labs.overthewire.org -p 2220
+password: gb8KRRCsshuZXI0tUuR6ypOFjiZbf3G8
+
+bandit24@bandit:~$ nc localhost 30002
+I am the pincode checker for user bandit25. Please enter the password for user bandit24 and the secret pincode on a single line, separated by a space.
+^C
+bandit24@bandit:~$ for i in $(seq 0 9999); do echo "gb8KRRCsshuZXI0tUuR6ypOFjiZbf3G8 $(printf '%04d' $i)"; done | nc localhost 30002 | grep -v Wrong
+I am the pincode checker for user bandit25. Please enter the password for user bandit24 and the secret pincode on a single line, separated by a space.
+Correct!
+The password of user bandit25 is iCi86ttT4KSNe1armKiwbQNmB3YJP3q4
+
+#### Understanding the Challenge
+Connecting to port 30002 reveals that it requires the current password for bandit24 AND a secret 4 digit pincode on the same line separated by a space. Since we don't know the pincode, we need to brute force all possible combinations from 0000 to 9999 — that's 10000 combinations.
+
+Doing this manually is impossible, so we write a one-liner that:
+1. Generates all 10000 combinations automatically
+2. Sends them all to port 30002
+3. Filters out all the "Wrong" responses to show only the correct one
+
+---
+
+#### Step 1 — Checking the Port
+```bash
+nc localhost 30002
+```
+Output:
+I am the pincode checker for user bandit25. Please enter the password for user bandit24 and the secret pincode on a singleline, separated by a space.
+This tells us the exact format we need:
+<bandit24 password> <4 digit pincode>
+
+#### Step 2 — Brute Forcing the Pincode
+```bash
+for i in $(seq 0 9999); do echo "gb8KRRCsshuZXI0tUuR6ypOFjiZbf3G8 $(printf '%04d' $i)"; done | nc localhost 30002 | grep -v Wrong
+```
+
+Let's break this down piece by piece:
+
+**`for i in $(seq 0 9999)`** — creates a loop that runs 10000 times, 
+with `i` taking values from 0 to 9999. `seq` generates a sequence of 
+numbers.
+
+**`$(printf '%04d' $i)`** — formats the number with leading zeros to 
+always be 4 digits. For example:
+- `0` becomes `0000`
+- `7` becomes `0007`
+- `42` becomes `0042`
+- `9999` stays `9999`
+
+**`echo "gb8KRRCsshuZXI0tUuR6ypOFjiZbf3G8 $(printf '%04d' $i)"`** — 
+prints each combination in the required format: password followed by 
+a space followed by the 4 digit pincode.
+
+**`done |`** — ends the loop and pipes all 10000 combinations into 
+the next command.
+
+**`nc localhost 30002`** — sends all the combinations to port 30002 
+one by one. The server checks each one and responds with either 
+"Wrong!" or "Correct!".
+
+**`| grep -v Wrong`** — filters the output by removing all lines 
+containing "Wrong". The `-v` flag inverts the match — showing only 
+lines that do NOT contain "Wrong". This means only the correct 
+response and the password are shown.
+
+Output:
+Correct!
+The password of user bandit25 is iCi86ttT4KSNe1armKiwbQNmB3YJP3q4
+
+### Commands Used
+
+**`seq`** — generates a sequence of numbers.
+Basic syntax: `seq <first> <last>`
+
+| Example | Output |
+|---------|--------|
+| `seq 1 5` | 1 2 3 4 5 |
+| `seq 0 9999` | 0 to 9999 |
+| `seq 1 2 10` | 1 3 5 7 9 (step of 2) |
+
+**`printf`** — formats and prints text, similar to `echo` but with 
+more formatting control.
+
+| Format | Meaning |
+|--------|---------|
+| `%04d` | Integer with minimum 4 digits, padded with zeros |
+| `%s` | String |
+| `%f` | Floating point number |
+| `%.2f` | Float with 2 decimal places |
+
+**`grep -v`** — inverts the match, showing lines that do NOT contain 
+the pattern. Very useful for filtering out unwanted output.
+```bash
+grep -v Wrong   # show everything except lines containing "Wrong."
+grep -v "^$"    # remove empty lines
+```
+
+This level demonstrates **brute forcing** — systematically trying every possible combination until the correct one is found. In real penetration testing, brute forcing is used against login pages, PINs, passwords, and other authentication mechanisms. The key to efficient brute forcing is automating the process with scripts rather than trying combinations manually. Always filter output with `grep` when brute forcing, so you don't have to scroll through thousands of "Wrong" responses to find the correct one.
+==================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
