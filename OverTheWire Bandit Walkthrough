@@ -2358,3 +2358,1000 @@ grep -v "^$"    # remove empty lines
 
 This level demonstrates **brute forcing** — systematically trying every possible combination until the correct one is found. In real penetration testing, brute forcing is used against login pages, PINs, passwords, and other authentication mechanisms. The key to efficient brute forcing is automating the process with scripts rather than trying combinations manually. Always filter output with `grep` when brute forcing, so you don't have to scroll through thousands of "Wrong" responses to find the correct one.
 ==================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+
+**Level 25 - Level 26: Logging in to bandit26 from bandit25 should be fairly easy… The shell for user bandit26 is not /bin/bash, but something else. Find out what it is, how it works and how to break out of it.
+NOTE: if you’re a Windows user and typically use PowerShell to SSH into bandit: Powershell is known to cause issues with the intended solution to this level. You should use command prompt instead.
+
+ ssh bandit25@bandit.labs.overthewire.org -p 2220
+ password: iCi86ttT4KSNe1armKiwbQNmB3YJP3q4
+
+bandit25@bandit:~$ ls
+bandit26.sshkey
+bandit25@bandit:~$ cat /etc/passwd | grep bandit26
+bandit26:x:11026:11026:bandit level 26:/home/bandit26:/usr/bin/showtext
+bandit25@bandit:~$ cat /usr/bin/showtext
+#!/bin/sh
+
+export TERM=linux
+
+exec more ~/text.txt
+exit 0
+bandit25@bandit:~$ ssh -i bandit26.sshkey bandit26@bandit.labs.overthewire.org -p 2220
+The authenticity of host '[bandit.labs.overthewire.org]:2220 ([127.0.0.1]:2220)' can't be established.
+ED25519 key fingerprint is SHA256:C2ihUBV7ihnV1wUXRb4RrEcLfXC5CXlhmAAM/urerLY.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Could not create directory '/home/bandit25/.ssh' (Permission denied).
+Failed to add the host to the list of known hosts (/home/bandit25/.ssh/known_hosts).
+                         _                     _ _ _   
+                        | |__   __ _ _ __   __| (_) |_ 
+                        | '_ \ / _` | '_ \ / _` | | __|
+                        | |_) | (_| | | | | (_| | | |_ 
+                        |_.__/ \__,_|_| |_|\__,_|_|\__|
+                                                       
+
+                      This is an OverTheWire game server. 
+            More information on http://www.overthewire.org/wargames
+
+!!! You are trying to log into this SSH server with a password on port 2220 from localhost.
+!!! Connecting from localhost is blocked to conserve resources.
+!!! Please log out and log in again.
+
+backend: gibson-0
+Received disconnect from 127.0.0.1 port 2220:2: no authentication methods enabled
+Disconnected from 127.0.0.1 port 2220
+bandit25@bandit:~$ 
+
+                                                                                                                   
+┌──(kali㉿25029826)-[~]
+└─$ ssh -i bandit26.sshkey bandit26@bandit.labs.overthewire.org -p 2220
+                         _                     _ _ _   
+                        | |__   __ _ _ __   __| (_) |_ 
+                        | '_ \ / _` | '_ \ / _` | | __|
+                        | |_) | (_| | | | | (_| | | |_ 
+                        |_.__/ \__,_|_| |_|\__,_|_|\__|
+                                                       
+
+                      This is an OverTheWire game server. 
+            More information on http://www.overthewire.org/wargames
+
+backend: gibson-0
+
+      ,----..            ,----,          .---.
+     /   /   \         ,/   .`|         /. ./|
+    /   .     :      ,`   .'  :     .--'.  ' ;
+   .   /   ;.  \   ;    ;     /    /__./ \ : |
+  .   ;   /  ` ; .'___,/    ,' .--'.  '   \' .
+  ;   |  ; \ ; | |    :     | /___/ \ |    ' '
+  |   :  | ; | ' ;    |.';  ; ;   \  \;      :
+  .   |  ' ' ' : `----'  |  |  \   ;  `      |
+  '   ;  \; /  |     '   :  ;   .   \    .\  ;
+   \   \  ',  /      |   |  '    \   \   ' \ |
+    ;   :    /       '   :  |     :   '  |--"
+     \   \ .'        ;   |.'       \   \ ;
+  www. `---` ver     '---' he       '---" ire.org
+
+
+Welcome to OverTheWire!
+
+If you find any problems, please report them to the #wargames channel on
+discord or IRC.
+
+--[ Playing the games ]--
+
+  This machine might hold several wargames.
+  If you are playing "somegame", then:
+
+    * USERNAMES are somegame0, somegame1, ...
+    * Most LEVELS are stored in /somegame/.
+    * PASSWORDS for each level are stored in /etc/somegame_pass/.
+
+  Write-access to homedirectories is disabled. It is advised to create a
+  working directory with a hard-to-guess name in /tmp/.  You can use the
+  command "mktemp -d" in order to generate a random and hard to guess
+  directory in /tmp/.  Read-access to both /tmp/ is disabled and to /proc
+  restricted so that users cannot snoop on eachother. Files and directories
+  with easily guessable or short names will be periodically deleted! The /tmp
+  directory is regularly wiped.
+  Please play nice:
+
+    * don't leave orphan processes running
+    * don't leave exploit-files laying around
+    * don't annoy other players
+    * don't post passwords or spoilers
+    * again, DONT POST SPOILERS!
+      This includes writeups of your solution on your blog or website!
+
+--[ Tips ]--
+
+  This machine has a 64bit processor and many security-features enabled
+  by default, although ASLR has been switched off.  The following
+  compiler flags might be interesting:
+
+    -m32                    compile for 32bit
+    -fno-stack-protector    disable ProPolice
+    -Wl,-z,norelro          disable relro
+
+  In addition, the execstack tool can be used to flag the stack as
+  executable on ELF binaries.
+
+  Finally, network-access is limited for most levels by a local
+  firewall.
+
+--[ Tools ]--
+
+ For your convenience we have installed a few useful tools which you can find
+ in the following locations:
+
+    * gef (https://github.com/hugsy/gef) in /opt/gef/
+    * pwndbg (https://github.com/pwndbg/pwndbg) in /opt/pwndbg/
+    * gdbinit (https://github.com/gdbinit/Gdbinit) in /opt/gdbinit/
+    * pwntools (https://github.com/Gallopsled/pwntools)
+    * radare2 (http://www.radare.org/)
+
+--[ More information ]--
+
+  For more information regarding individual wargames, visit
+  http://www.overthewire.org/wargames/
+
+  For support, questions or comments, contact us on discord or IRC.
+
+  Enjoy your stay!
+
+s0773xxkk0MXfdqOfPRVr9L3jJBUOgCZ
+
+###  Key Insight
+When you SSH into bandit26, it immediately logs you out because the shell is not `/bin/bash` — it's a custom script called `/usr/bin/showtext` that runs `more` to display a text file and then exits. The trick is to exploit `more`'s interactive mode by making the terminal so small that `more` is forced to pause, and then from within `more` open `vim` to read the password file.
+
+---
+
+#### Step 1 — Finding the SSH Key
+```bash
+ls
+```
+Logged into bandit25 we find `bandit26.sshkey` — the private SSH key 
+for bandit26.
+
+---
+
+#### Step 2 — Checking bandit26's Shell
+```bash
+cat /etc/passwd | grep bandit26
+```
+Output:
+bandit26:x:11026:11026:bandit level 26:/home/bandit26:/usr/bin/showtext
+
+Every user in Linux has a shell assigned to them in `/etc/passwd`. The 
+last field after the final `:` is the shell. For most users this is 
+`/bin/bash` but for bandit26 it is `/usr/bin/showtext` — a custom script.
+
+---
+
+#### Step 3 — Reading the Custom Shell Script
+```bash
+cat /usr/bin/showtext
+```
+Output:
+```bash
+#!/bin/sh
+export TERM=linux
+exec more ~/text.txt
+exit 0
+```
+Breaking this down:
+- `#!/bin/sh` — runs using sh shell
+- `export TERM=linux` — sets the terminal type
+- `exec more ~/text.txt` — runs `more` to display `text.txt` and 
+  **replaces the current shell process with `more`**. This means when 
+  `more` finishes, there is no shell to return to — the connection closes.
+- `exit 0` — exits cleanly (though this is never reached because of `exec`)
+
+This is why we get logged out immediately — `more` displays the text, 
+finishes, and the connection closes since there is no shell running.
+
+---
+
+#### Step 4 — Downloading the Key to Local Machine
+Since localhost connections are blocked on the bandit server, we download 
+the key to our local Kali machine:
+```bash
+scp -P 2220 bandit25@bandit.labs.overthewire.org:bandit26.sshkey .
+chmod 600 bandit26.sshkey
+```
+
+---
+
+#### Step 5 — Making the Terminal Very Small
+This is the most important and unusual step. We need to make our terminal 
+window extremely small — just 3-4 lines tall — before SSHing in.
+
+**Why?** The `more` command is a pager — it displays content one page at 
+a time. When the content is larger than the terminal height, `more` pauses 
+and waits for input instead of displaying everything and exiting. If the 
+terminal is big enough to show all the content at once, `more` just 
+displays it all and exits immediately — logging us out. By making the 
+terminal tiny, we force `more` to pause at `--More--(16%)` giving us 
+a chance to interact with it.
+
+---
+
+#### Step 6 — SSHing into bandit26
+```bash
+ssh -i bandit26.sshkey bandit26@bandit.labs.overthewire.org -p 2220
+```
+With the tiny terminal, `more` pauses and shows `--More--(16%)` at the 
+bottom — this means it's waiting for our input.
+
+---
+
+#### Step 7 — Opening vim from within more
+While `more` is paused, press **`v`**.
+
+**Why `v`?** `more` has built-in keyboard shortcuts. Pressing `v` opens 
+the current file in your default text editor — which is `vim`. This is 
+a legitimate feature of `more` but we are exploiting it to get access 
+to a text editor while running as bandit26.
+
+At this point you can expand the terminal back to normal size.
+
+---
+
+#### Step 8 — Reading the Password in vim
+Once vim opens, press **`Escape`** to make sure you are NOT in insert 
+mode, then type:
+:e /etc/bandit_pass/bandit26
+And press Enter.
+
+**Why `:e`?** In vim, `:e` stands for "edit" — it opens a file in vim. 
+Since vim is running as bandit26 (because we launched it through the 
+bandit26 shell), it has bandit26's permissions and can read 
+`/etc/bandit_pass/bandit26` which contains the password.
+
+The password is displayed in vim!
+
+---
+
+### Commands and Concepts Used
+
+**`/etc/passwd`** — a file that stores information about every user on 
+the system. Each line represents one user with fields separated by `:`:
+username:password:UID:GID:description:home:shell
+
+The last field is the user's default shell. This is how we discovered 
+bandit26 uses a custom shell.
+
+**`more`** — a pager program that displays text one page at a time.
+Unlike `cat` which dumps everything at once, `more` pauses when the 
+content fills the screen.
+
+Key `more` keyboard shortcuts:
+| Key | Action |
+|-----|--------|
+| `Space` | Next page |
+| `Enter` | Next line |
+| `v` | Open in vim editor |
+| `q` | Quit |
+| `/pattern` | Search for pattern |
+| `h` | Show help |
+
+**`exec`** — replaces the current shell process with the specified 
+command. Unlike running a normal command which creates a child process, 
+`exec` completely replaces the current process. This means when the 
+command finishes there is no shell to return to.
+
+**vim `:e`** — opens a file in vim for editing.
+Other useful vim commands:
+| Command | Action |
+|---------|--------|
+| `:e <file>` | Open a file |
+| `:q` | Quit vim |
+| `:q!` | Force quit without saving |
+| `:w` | Save file |
+| `:wq` | Save and quit |
+| `i` | Enter insert mode |
+| `Escape` | Exit insert mode |
+| `/pattern` | Search for pattern |
+
+### Why This Works
+The whole exploit chain is:
+1. `more` is forced to pause by making the terminal tiny
+2. `more` has a built in shortcut `v` to open vim
+3. vim runs with bandit26's permissions since it was launched through 
+   the bandit26 shell
+4. vim's `:e` command can open any file that bandit26 has permission 
+   to read — including `/etc/bandit_pass/bandit26`
+
+This level teaches an important security concept — **shell escape**. 
+When a restricted environment gives you access to a powerful tool like  vim or more, you can often "escape" the restrictions by using that  tool's built-in features to access the broader system. vim is 
+particularly powerful for shell escapes because it can open files,  run shell commands (`:!command`), and even spawn a full shell (`:set shell=/bin/bash` then `:shell`). In penetration testing, always look for ways to escape restricted shells using available tools.
+==========================================================================================================================================================================================================================================================================================
+
+** Level 26 - Level 27: Good job getting a shell! Now hurry and grab the password for bandit27!
+
+:shell
+bandit26@bandit:~$ ls
+bandit27-do  text.txt
+bandit26@bandit:~$ ./bandit27-do cat /etc/bandit_pass/bandit27
+upsNCc7vzaRDx6oZC6GiR6ERwe1MowGB
+bandit26@bandit:~$ 
+
+#### Key Insight
+This level is a continuation of Level 25 → 26. We are already logged in 
+as bandit26 through the vim shell escape from the previous level. Instead 
+of quitting vim, we use it to spawn a proper bash shell and then exploit 
+a setuid binary called `bandit27-do` to read bandit27's password.
+
+---
+
+#### Step 1 — Spawning a Bash Shell from vim
+While still inside vim from the previous level, we first set the shell 
+to bash:
+:set shell=/bin/bash
+**Why?** By default vim uses whatever shell is set in the environment. 
+Since bandit26's shell is `/usr/bin/showtext` (the custom script that 
+logs us out immediately), we need to override it to `/bin/bash` so vim 
+spawns a proper interactive shell instead.
+
+Then we spawn the shell:
+:shell
+
+**Why `:shell`?** This is a vim command that launches a shell from 
+within vim. Since we just set the shell to `/bin/bash`, it spawns a 
+full bash shell running as bandit26. We can see `bandit26@bandit:~$` 
+at the bottom confirming we now have a proper interactive shell.
+
+---
+
+#### Step 2 — Listing the Files
+```bash
+ls
+```
+Output:
+bandit27-do  text.txt
+
+We can see two files:
+- `text.txt` — the file that `more` displays when we SSH in as bandit26
+- `bandit27-do` — a setuid binary similar to what we saw in Level 19
+
+---
+
+#### Step 3 — Using the Setuid Binary
+```bash
+./bandit27-do cat /etc/bandit_pass/bandit27
+```
+Breaking this down piece by piece:
+
+**`./bandit27-do`** — runs the setuid binary in the current directory. 
+The `./` prefix tells the shell to look for the binary in the current 
+directory rather than in the system PATH.
+
+**`cat`** — the command we want to run with elevated permissions. We 
+pass this as an argument to `bandit27-do`.
+
+**`/etc/bandit_pass/bandit27`** — the file we want to read. This file 
+is only readable by bandit27, so we need the setuid binary to access it.
+
+`bandit27-do` acts as a wrapper — it takes the command you give it 
+(`cat /etc/bandit_pass/bandit27`) and runs it as bandit27. Think of 
+it like `sudo` but specifically for bandit27. This is what allows us 
+to read a file that we as bandit26 normally cannot access.
+
+---
+
+### Commands and Concepts Used
+
+**`:set shell=/bin/bash`** — overrides vim's shell setting. vim uses 
+this when spawning a shell with `:shell` or running external commands 
+with `:!`. Without this, vim would use bandit26's default shell 
+(`/usr/bin/showtext`) which would log us out immediately.
+
+**`:shell`** — spawns an interactive shell from within vim. The shell 
+used is whatever is set in vim's `shell` option. This is a legitimate 
+vim feature but extremely useful for shell escapes in CTFs and 
+penetration testing.
+
+**`:e <file>`** — vim's edit command. Opens any file in vim for viewing 
+or editing. Since vim runs with bandit26's permissions, it can open any 
+file bandit26 has access to. We used this in the previous level to read 
+bandit26's password:
+:e /etc/bandit_pass/bandit26
+
+**Setuid Binary** — a binary with the setuid permission bit set. When 
+executed, it runs with the permissions of the file's owner rather than 
+the user running it. You can identify setuid binaries with `ls -la` — 
+they show `s` instead of `x` in the owner's execute position:
+-rwsr-x--- 1 bandit27 bandit26 ... bandit27-do
+
+Useful vim commands used in this level and the previous:
+| Command | Action |
+|---------|--------|
+| `:e <file>` | Open a file in vim |
+| `:set shell=/bin/bash` | Override the shell vim uses |
+| `:shell` | Spawn an interactive shell from vim |
+| `:q` | Quit vim |
+| `:q!` | Force quit without saving |
+| `Escape` | Exit insert mode |
+
+---
+
+### The Full Exploit Chain for Levels 25 → 26 → 27
+
+bandit25 → found bandit26.sshkey
+→ downloaded key to local machine using scp
+→ made terminal tiny (3-4 lines) to force more to pause
+→ pressed v inside more to open vim
+→ used :e /etc/bandit_pass/bandit26 to read password (Level 25→26)
+→ used :set shell=/bin/bash to override the restricted shell
+→ used :shell to spawn a full bash shell as bandit26
+→ ran ./bandit27-do cat /etc/bandit_pass/bandit27 to read
+bandit27's password using the setuid binary (Level 26→27)
+
+This level reinforces the **vim shell escape** concept. Once you have access to vim, you essentially have access to a full shell — you can read files, write files, run commands, and spawn shells. This is why vim (and other powerful text editors like nano and emacs) are heavily restricted in high security environments. In penetration  testing, getting access to vim on a restricted system is often considered equivalent to getting a full shell. Always check 
+`/etc/passwd` to understand what shell a user has — a non-standard shell is always a red flag worth investigating.
+==============================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+
+**Level 27 - Level 28: There is a git repository at ssh://bandit27-git@bandit.labs.overthewire.org/home/bandit27-git/repo via the port 2220. The password for the user bandit27-git is the same as for the user bandit27.
+From your local machine (not the OverTheWire machine!), clone the repository and find the password for the next level. This needs git installed locally on your machine.
+
+password: upsNCc7vzaRDx6oZC6GiR6ERwe1MowGB
+
+┌──(kali㉿25029826)-[~]
+└─$ git clone ssh://bandit27-git@bandit.labs.overthewire.org:2220/home/bandit27-git/repo
+Cloning into 'repo'...
+                         _                     _ _ _   
+                        | |__   __ _ _ __   __| (_) |_ 
+                        | '_ \ / _` | '_ \ / _` | | __|
+                        | |_) | (_| | | | | (_| | | |_ 
+                        |_.__/ \__,_|_| |_|\__,_|_|\__|
+                                                       
+
+                      This is an OverTheWire game server. 
+            More information on http://www.overthewire.org/wargames
+
+backend: gibson-0
+bandit27-git@bandit.labs.overthewire.org's password: 
+remote: Enumerating objects: 3, done.
+remote: Counting objects: 100% (3/3), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 3 (delta 0), reused 0 (delta 0), pack-reused 0
+Receiving objects: 100% (3/3), done.
+                                                                                                                   
+┌──(kali㉿25029826)-[~]
+└─$ cd repo     
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo]
+└─$ ls
+README
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo]
+└─$ cat README                                                         
+The password to the next level is: Yz9IpL0sBcCeuG7m9uQFt8ZNpS4HZRcN
+                                                                                                                   
+This level introduces `git` — a version control system used to track changes to files and collaborate on projects. There is a git repository hosted on the bandit server that we need to clone and read. 
+
+Important note: Unlike previous levels, this level specifically requires cloning from your **local machine** and not from inside the bandit server, since localhost connections are blocked on the server itself.
+
+#### Step 1 — Clone the Repository from Local Machine
+From your local machine (not the bandit server), run:
+```bash
+git clone ssh://bandit27-git@bandit.labs.overthewire.org:2220/home/bandit27-git/repo
+```
+Breaking this down:
+- `git clone` — downloads a copy of the remote repository to your local machine
+- `ssh://` — uses SSH as the transport protocol, meaning the connection 
+  is encrypted and authenticated
+- `bandit27-git` — the git user account on the bandit server
+- `@bandit.labs.overthewire.org:2220` — the server address and port
+- `/home/bandit27-git/repo` — the path to the repository on the server
+
+When prompted for a password, use bandit27's password.
+
+---
+
+#### Step 2 — Read the README
+```bash
+cd repo
+cat README
+```
+The README file contains the password for the next level directly.
+
+---
+
+### What is Git?
+Git is a **distributed version control system** — it tracks changes to 
+files over time, allowing you to see the history of changes, revert to 
+previous versions, and collaborate with others. It is the most widely 
+used version control system in the world and is the backbone of platforms 
+like GitHub and GitLab.
+
+Key git concepts:
+- **Repository (repo)** — a directory tracked by git containing all 
+  files and their complete history
+- **Commit** — a snapshot of changes saved to the repository
+- **Clone** — a complete copy of a remote repository downloaded locally
+- **Branch** — a separate line of development within a repository
+- **Remote** — a version of the repository hosted on a server
+
+`git clone` downloads a complete copy of a remote repository including 
+all files, branches, and commit history.
+Basic syntax: `git clone <url>`
+
+| Flag | Description |
+|------|-------------|
+| `--branch` | Clone a specific branch |
+| `--depth` | Shallow clone with limited history e.g. `--depth 1` |
+| `--bare` | Clone without working directory |
+| `-q` | Quiet mode — suppress output |
+
+**Common git clone URL formats:**
+```bash
+# SSH (authenticated, encrypted)
+git clone ssh://user@host:port/path/to/repo
+
+# HTTPS
+git clone https://github.com/user/repo.git
+
+# Local
+git clone /path/to/local/repo
+```
+
+In this level, we used SSH to clone the repository because the bandit server uses SSH for authentication. The password for `bandit27-git` is the same as bandit27's login password — this is a common pattern in git hosting where the git user shares credentials with the system user.
+
+ Note: Attempting to clone from inside the bandit server using `localhost` will fail because all localhost SSH connections are blocked on the server. Always clone git repositories at these levels from your local machine using the full server hostname.
+==================================================================================================================================================================================================================================================================================================================
+
+**Level 28 - Level 29: There is a git repository at ssh://bandit28-git@bandit.labs.overthewire.org/home/bandit28-git/repo via the port 2220. The password for the user bandit28-git is the same as for the user bandit28.**
+From your local machine (not the OverTheWire machine!), clone the repository and find the password for the next level. This needs git installed locally on your machine.
+
+password: Yz9IpL0sBcCeuG7m9uQFt8ZNpS4HZRcN
+
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo]
+└─$ git clone ssh://bandit28-git@bandit.labs.overthewire.org:2220/home/bandit28-git/repo repo28
+Cloning into 'repo28'...
+                         _                     _ _ _   
+                        | |__   __ _ _ __   __| (_) |_ 
+                        | '_ \ / _` | '_ \ / _` | | __|
+                        | |_) | (_| | | | | (_| | | |_ 
+                        |_.__/ \__,_|_| |_|\__,_|_|\__|
+                                                       
+
+                      This is an OverTheWire game server. 
+            More information on http://www.overthewire.org/wargames
+
+backend: gibson-0
+bandit28-git@bandit.labs.overthewire.org's password: 
+remote: Enumerating objects: 9, done.
+remote: Counting objects: 100% (9/9), done.
+remote: Compressing objects: 100% (6/6), done.
+remote: Total 9 (delta 2), reused 0 (delta 0), pack-reused 0
+Receiving objects: 100% (9/9), done.
+Resolving deltas: 100% (2/2), done.
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo]
+└─$ ls
+README  repo28
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo]
+└─$ cd repo28
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo/repo28]
+└─$ ls
+README.md
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo/repo28]
+└─$ cat README.md
+# Bandit Notes
+Some notes for level29 of bandit.
+
+## credentials
+
+- username: bandit29
+- password: xxxxxxxxxx
+
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo/repo28]
+└─$ git log                                                                                    
+commit adc7f885a129baee883058b8a870739489f80194 (HEAD -> master, origin/master, origin/HEAD)
+Author: Morla Porla <morla@overthewire.org>
+Date:   Fri Apr 3 15:17:54 2026 +0000
+
+    fix info leak
+
+commit a3437bddd447f2d496731658e86b98cbea9d3c98
+Author: Morla Porla <morla@overthewire.org>
+Date:   Fri Apr 3 15:17:54 2026 +0000
+
+    add missing data
+
+commit cb630ec182b75bc289595511f8bcf4d47cfec50d
+Author: Ben Dover <noone@overthewire.org>
+Date:   Fri Apr 3 15:17:54 2026 +0000
+
+    initial commit of README.md
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo/repo28]
+└─$ git show a3437bddd447f2d496731658e86b98cbea9d3c98
+commit a3437bddd447f2d496731658e86b98cbea9d3c98
+Author: Morla Porla <morla@overthewire.org>
+Date:   Fri Apr 3 15:17:54 2026 +0000
+
+    add missing data
+
+diff --git a/README.md b/README.md
+index 7ba2d2f..d4e3b74 100644
+--- a/README.md
++++ b/README.md
+@@ -4,5 +4,5 @@ Some notes for level29 of bandit.
+ ## credentials
+ 
+ - username: bandit29
+-- password: <TBD>
++- password: 4pT1t5DENaYuqnqvadYs1oE4QLCdjmJ7
+ 
+ #### Key Insight
+The README.md file shows the password as `xxxxxxxxxx` — someone tried to hide it by overwriting it. However git keeps a **complete history of every change ever made to every file**. Even if someone edits or deletes sensitive information, it remains in the git history forever unless the 
+repository is completely rewritten. By looking at previous commits we can find the version of the file where the password was still in plaintext.
+
+This is a very important real world lesson — **never commit sensitive information to a git repository**, even if you delete it later, because 
+the history is permanent.
+
+---     
+
+#### Step 1 — Clone the Repository
+From your local machine:
+```bash
+git clone ssh://bandit28-git@bandit.labs.overthewire.org:2220/home/bandit28-git/repo repo28
+cd repo28
+```
+We clone the repository from the bandit server to our local machine 
+using SSH. The password for `bandit28-git` is the same as bandit28's 
+login password.
+
+---
+
+#### Step 2 — Read the README
+```bash
+cat README.md
+```
+Output:
+Bandit Notes
+Some notes for level29 of bandit.
+credentials
+
+username: bandit29
+password: xxxxxxxxxx
+
+The password has been replaced with `xxxxxxxxxx`. Someone tried to 
+hide it by editing the file. But since this change was committed to 
+git, the old version is still stored in the commit history.
+
+---
+
+#### Step 3 — Check the Commit History
+```bash
+git log
+```
+Output:
+commit adc7f885a129baee883058b8a870739489f80194 (HEAD -> master)Author: Morla Porla morla@overthewire.orgDate:   Fri Apr 3 15:17:54 2026fix info leak
+
+commit a3437bddd447f2d496731658e86b98cbea9d3c98Author: Morla Porla morla@overthewire.orgDate:   Fri Apr 3 15:17:54 2026add missing data
+
+commit cb630ec182b75bc289595511f8bcf4d47cfec50dAuthor: Ben Dover noone@overthewire.orgDate:   Fri Apr 3 15:17:54 2026initial commit of README.md
+
+**Why `git log`?** It shows the complete commit history of the 
+repository. Each entry shows:
+- **Commit hash** — a unique 40 character identifier for each commit
+- **Author** — who made the change
+- **Date** — when the change was made
+- **Message** — a short description of what was changed
+
+Reading the commit messages tells us the story:
+1. `initial commit of README.md` — the file was first created with 
+   password as `<TBD>` (not set yet)
+2. `add missing data` — the actual password was added in plaintext
+3. `fix info leak` — someone noticed the password was exposed and 
+   replaced it with `xxxxxxxxxx`
+
+The password we need is in commit 2 — `add missing data`.
+
+---
+
+#### Step 4 — View the Previous Commit
+```bash
+git show a3437bddd447f2d496731658e86b98cbea9d3c98
+```
+Output:
+commit a3437bddd447f2d496731658e86b98cbea9d3c98Author: Morla Porla morla@overthewire.orgDate:   Fri Apr 3 15:17:54 2026add missing data
+
+diff --git a/README.md b/README.md
+--- a/README.md
++++ b/README.md
+@@ -4,5 +4,5 @@ Some notes for level29 of bandit.
+
+credentials
+username: bandit29
+-- password: <TBD>
++- password: 4pT1t5DENaYuqnqvadYs1oE4QLCdjmJ7
+
+**Why `git show`?** It displays the full details of a specific commit 
+including all the changes made to files. The output shows a **diff** 
+(difference) between the file before and after the commit:
+- Lines starting with `-` (red) — what was removed
+- Lines starting with `+` (green) — what was added
+
+So we can see the password was changed from `<TBD>` to 
+`4pT1t5DENaYuqnqvadYs1oE4QLCdjmJ7` in this commit — revealing 
+the password!
+
+---
+
+### Commands Used
+
+**`git log`** — displays the commit history of the repository showing 
+all commits from newest to oldest.
+Basic syntax: `git log`
+
+| Flag | Description |
+|------|-------------|
+| `--oneline` | Show each commit on a single line (hash + message) |
+| `--all` | Show commits from all branches |
+| `-p` | Show the full diff for each commit |
+| `--author` | Filter commits by author |
+| `-n <number>` | Show only the last n commits e.g. `-n 5` |
+| `--graph` | Show a visual branch graph |
+
+**`git show`** — displays the details of a specific commit, including 
+the commit message and all file changes (diff).
+Basic syntax: `git show <commit-hash>`
+
+| Flag | Description |
+|------|-------------|
+| `--stat` | Show only filenames changed, not the full diff |
+| `--name-only` | Show only the names of changed files |
+| `-q` | Quiet mode — suppress diff output |
+
+**Reading a git diff:**
+-- password: <TBD>      ← line that was REMOVED (old version)
++- password: abc123     ← line that was ADDED (new version)
+Lines with `-` show the old content, and lines with `+` show the 
+new content. Lines with neither are unchanged context lines.
+
+---
+
+### Key Takeaway
+This level teaches one of the most important lessons in security  — **git history is permanent**. Even if you commit sensitive data (passwords, API keys, private keys) and then edit or delete it in a later commit, the original data remains in the git history and 
+can be retrieved with `git log` and `git show`. This is a very common real-world security mistake — many developers accidentally commit credentials to GitHub and think deleting them fixes the 
+problem. The only real fix is to:
+1. Immediately rotate/change the exposed credentials
+2. Use `git filter-branch` or BFG Repo Cleaner to rewrite history
+3. Force push the rewritten history
+4. Never store credentials in code — use environment variables or secret managers instead.
+===========================================================================================================================================================================================================================================================================================================
+
+**Level 29 - Level 30: There is a git repository at ssh://bandit29-git@bandit.labs.overthewire.org/home/bandit29-git/repo via port 2220. The password for the user bandit29-git is the same as for the user bandit29.**
+From your local machine (not the OverTheWire machine!), clone the repository and find the password for the next level. This needs git installed locally on your machine.
+
+password: 4pT1t5DENaYuqnqvadYs1oE4QLCdjmJ7
+
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo]
+└─$ git clone ssh://bandit29-git@bandit.labs.overthewire.org:2220/home/bandit29-git/repo repo29
+Cloning into 'repo29'...
+                         _                     _ _ _   
+                        | |__   __ _ _ __   __| (_) |_ 
+                        | '_ \ / _` | '_ \ / _` | | __|
+                        | |_) | (_| | | | | (_| | | |_ 
+                        |_.__/ \__,_|_| |_|\__,_|_|\__|
+                                                       
+
+                      This is an OverTheWire game server. 
+            More information on http://www.overthewire.org/wargames
+
+backend: gibson-0
+bandit29-git@bandit.labs.overthewire.org's password: 
+remote: Enumerating objects: 16, done.
+remote: Counting objects: 100% (16/16), done.
+remote: Compressing objects: 100% (11/11), done.
+Receiving objects: 100% (16/16), 1.44 KiB | 86.00 KiB/s, done.
+remote: Total 16 (delta 2), reused 0 (delta 0), pack-reused 0
+Resolving deltas: 100% (2/2), done.
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo]
+└─$ ls
+README  repo28  repo29
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo]
+└─$ cd repo29
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo/repo29]
+└─$ ls
+README.md
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo/repo29]
+└─$ cat README.md
+# Bandit Notes
+Some notes for bandit30 of bandit.
+
+## credentials
+
+- username: bandit30
+- password: <no passwords in production!>
+
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo/repo29]
+└─$ git branch -a                                                                              
+* master
+  remotes/origin/HEAD -> origin/master
+  remotes/origin/dev
+  remotes/origin/master
+  remotes/origin/sploits-dev
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo/repo29]
+└─$ git checkout dev                                                                           
+branch 'dev' set up to track 'origin/dev'.
+Switched to a new branch 'dev'
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo/repo29]
+└─$ cat README.md
+# Bandit Notes
+Some notes for bandit30 of bandit.
+
+## credentials
+
+- username: bandit30
+- password: qp30ex3VLz5MDG1n91YowTv4Q8l7CDZL
+
+#### Key Insight
+This level builds on the previous git level. The README in the `master` branch shows `<no passwords in production!>` — hinting that the password is not in the production (master) branch but might be in a development 
+branch. Git repositories can have multiple **branches** — separate lines of development that can exist independently of each other. By listing all branches and switching to the `dev` branch we find the password in plaintext.
+
+---
+
+#### Step 1 — Clone the Repository
+From your local machine:
+```bash
+git clone ssh://bandit29-git@bandit.labs.overthewire.org:2220/home/bandit29-git/repo repo29
+cd repo29
+```
+We clone the repository to our local machine just like the previous 
+level. The password for `bandit29-git` is the same as bandit29's 
+login password.
+
+---
+
+#### Step 2 — Read the README
+```bash
+cat README.md
+```
+Output:
+Bandit Notes
+Some notes for bandit30 of bandit.
+credentials
+
+username: bandit30
+password: <no passwords in production!>
+
+The password is not shown. The message `<no passwords in production!>` 
+is a big hint — "production" refers to the `master` branch which is 
+the live/production version of the code. This suggests the password 
+might exist in a non-production branch like a development branch.
+
+---
+
+#### Step 3 — Check the Commit History
+We could check `git log` but since the hint says "no passwords in 
+production" we should look at other branches instead.
+
+---
+
+#### Step 4 — List All Branches
+```bash
+git branch -a
+```
+Output:
+
+master
+remotes/origin/HEAD -> origin/master
+remotes/origin/dev
+remotes/origin/master
+remotes/origin/sploits-dev
+
+**Why `git branch -a`?** `git branch` lists all branches in the 
+repository. The `-a` flag shows ALL branches including remote ones 
+(branches that exist on the server). Without `-a` it would only show 
+local branches.
+
+Reading the output:
+- `* master` — the current branch we are on (indicated by `*`)
+- `remotes/origin/HEAD -> origin/master` — the default branch on 
+  the remote server points to master
+- `remotes/origin/dev` — a development branch on the remote server
+- `remotes/origin/master` — the master branch on the remote server
+- `remotes/origin/sploits-dev` — another branch, likely for exploits
+
+The `dev` branch is the most interesting one — development branches 
+often contain work in progress that hasn't been cleaned up for 
+production yet, including sensitive information that shouldn't be there.
+
+---
+
+#### Step 5 — Switch to the Dev Branch
+```bash
+git checkout dev
+```
+Output:
+branch 'dev' set up to track 'origin/dev'.
+Switched to a new branch 'dev'
+**Why `git checkout`?** It switches between branches. When we switch 
+to `dev`, all the files in our directory change to reflect the state 
+of the `dev` branch. The message "set up to track origin/dev" means 
+our local `dev` branch is now linked to the remote `dev` branch.
+
+---
+
+#### Step 6 — Read the README again
+```bash
+cat README.md
+```
+Output:
+Bandit Notes
+Some notes for bandit30 of bandit.
+credentials
+
+username: bandit30
+password: qp30ex3VLz5MDG1n91YowTv4Q8l7CDZL
+
+The `dev` branch has the password in plaintext!
+
+---
+
+### Commands Used
+
+**`git branch`** — lists, creates, or deletes branches.
+Basic syntax: `git branch`
+
+| Flag | Description |
+|------|-------------|
+| `-a` | Show all branches including remote branches |
+| `-r` | Show only remote branches |
+| `-d` | Delete a branch e.g. `git branch -d dev` |
+| `-v` | Show last commit on each branch |
+| `--merged` | Show branches already merged into current branch |
+
+**`git checkout`** — switches between branches or restores files.
+Basic syntax: `git checkout <branch>`
+
+| Flag | Description |
+|------|-------------|
+| `-b` | Create a new branch and switch to it e.g. `git checkout -b newbranch` |
+| `-f` | Force checkout even if there are uncommitted changes |
+| `--` | Restore a specific file to its last committed state |
+
+---
+
+### What are Git Branches?
+A branch in git is a separate line of development. Think of it like 
+a parallel universe — changes made in one branch don't affect other 
+branches until they are merged together.
+
+Common branch naming conventions:
+| Branch | Purpose |
+|--------|---------|
+| `master` / `main` | Production code — stable, live version |
+| `dev` / `develop` | Development code — work in progress |
+| `feature/xxx` | A specific new feature being built |
+| `hotfix/xxx` | Emergency fix for a production bug |
+| `sploits-dev` | In this case, likely exploit development |
+
+**Why does this matter for security?**
+Development branches often contain:
+- Hardcoded credentials for testing
+- Debug information
+- Unfinished security controls
+- Sensitive data that hasn't been cleaned up yet
+
+In real penetration testing, always check all branches of a git repository — developers often leave sensitive information in non-master branches, thinking it's safe because it's "not in production."
+
+The key lesson here is that git repositories can have multiple branches, and sensitive data can be hidden in any of them. Always use `git branch -a` to list all branches when investigating a repository — never assume the master branch is the only one worth looking at.
+=======================================================================================================================================================================================================================================================================================================================
