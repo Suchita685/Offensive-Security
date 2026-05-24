@@ -3355,3 +3355,651 @@ In real penetration testing, always check all branches of a git repository — d
 
 The key lesson here is that git repositories can have multiple branches, and sensitive data can be hidden in any of them. Always use `git branch -a` to list all branches when investigating a repository — never assume the master branch is the only one worth looking at.
 =======================================================================================================================================================================================================================================================================================================================
+
+**Level 30 - Level 31: There is a git repository at ssh://bandit30-git@bandit.labs.overthewire.org/home/bandit30-git/repo via the port 2220. The password for the user bandit30-git is the same as for the user bandit30.**
+From your local machine (not the OverTheWire machine!), clone the repository and find the password for the next level. This needs git installed locally on your machine.
+
+password: qp30ex3VLz5MDG1n91YowTv4Q8l7CDZL
+
+┌──(kali㉿25029826)-[~]
+└─$ git clone ssh://bandit30-git@bandit.labs.overthewire.org:2220/home/bandit30-git/repo repo30
+Cloning into 'repo30'...
+                         _                     _ _ _   
+                        | |__   __ _ _ __   __| (_) |_ 
+                        | '_ \ / _` | '_ \ / _` | | __|
+                        | |_) | (_| | | | | (_| | | |_ 
+                        |_.__/ \__,_|_| |_|\__,_|_|\__|
+                                                       
+
+                      This is an OverTheWire game server. 
+            More information on http://www.overthewire.org/wargames
+
+backend: gibson-0
+bandit30-git@bandit.labs.overthewire.org's password: 
+remote: Enumerating objects: 4, done.
+remote: Counting objects: 100% (4/4), done.
+remote: Total 4 (delta 0), reused 0 (delta 0), pack-reused 0
+Receiving objects: 100% (4/4), done.
+
+┌──(kali㉿25029826)-[~]
+└─$ cd repo30                
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo30]
+└─$ ls
+README.md
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo30]
+└─$ cat README.md                                                      
+just an epmty file... muahaha
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo30]
+└─$ git branch -a                                                                              
+* master
+  remotes/origin/HEAD -> origin/master
+  remotes/origin/master
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo30]
+└─$ git log      
+commit bd393e0e59a075f92fd84edc0ad8d13f64572de2 (HEAD -> master, origin/master, origin/HEAD)
+Author: Ben Dover <noone@overthewire.org>
+Date:   Fri Apr 3 15:17:58 2026 +0000
+
+    initial commit of README.md
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo30]
+└─$ git tag
+secret
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo30]
+└─$ git show secret
+fb5S2xb7bRyFmAvQYQGEqsbhVyJqhnDy
+
+#### Key Insight
+This level introduces a new git concept — **tags**. Unlike the previous 
+levels where the password was hidden in commit history or a different 
+branch, this time the README is just an empty troll file and there are 
+no other branches or commits to look at. The password is stored in a 
+git tag called `secret`. Tags are often overlooked when investigating 
+a repository making them a good hiding place for sensitive information.
+
+---
+
+#### Step 1 — Clone the Repository
+From your local machine:
+```bash
+git clone ssh://bandit30-git@bandit.labs.overthewire.org:2220/home/bandit30-git/repo repo30
+cd repo30
+```
+
+---
+
+#### Step 2 — Read the README
+```bash
+cat README.md
+```
+Output:
+just an empty file... muahaha
+
+The README is just a troll message — nothing useful here.
+
+---
+
+#### Step 3 — Check Branches
+```bash
+git branch -a
+```
+Output:
+
+master remotes/origin/HEAD -> origin/masterremotes/origin/master
+
+Only one branch — `master`. Unlike the previous level there are no 
+development or other branches to check. Dead end.
+
+---
+
+#### Step 4 — Check Commit History
+```bash
+git log
+```
+Output:
+commit bd393e0e59a075f92fd84edc0ad8d13f64572de2Author: Ben Dover noone@overthewire.orginitial commit of README.md
+Only one commit — the initial one. No previous commits with hidden 
+passwords like in Level 28. Dead end.
+
+---
+
+#### Step 5 — Check Git Tags
+```bash
+git tag
+```
+Output:
+secret
+
+**Why `git tag`?** Tags are another feature of git that are often 
+overlooked. A tag is a label that points to a specific commit — 
+commonly used to mark release versions (e.g. `v1.0`, `v2.0`). 
+However tags can also store arbitrary data. We find a tag called 
+`secret` which is suspicious.
+
+---
+
+#### Step 6 — Read the Tag
+```bash
+git show secret
+```
+Output:
+fb5S2xb7bRyFmAvQYQGEqsbhVyJqhnDy
+
+**Why `git show`?** Just like we used `git show` in Level 28 to 
+display the details of a specific commit, we can also use it to 
+display the contents of a tag. The `secret` tag contains the 
+password directly as its message.
+
+---
+
+### Commands Used
+
+**`git tag`** — lists, creates, or deletes tags in a repository.
+Basic syntax: `git tag`
+
+| Flag | Description |
+|------|-------------|
+| `-a` | Create an annotated tag e.g. `git tag -a v1.0 -m "version 1"` |
+| `-d` | Delete a tag e.g. `git tag -d secret` |
+| `-l` | List tags matching a pattern e.g. `git tag -l "v1.*"` |
+| `--sort` | Sort tags e.g. `git tag --sort=version:refname` |
+
+**Types of git tags:**
+| Type | Description |
+|------|-------------|
+| Lightweight tag | Just a pointer to a commit — like a bookmark |
+| Annotated tag | A full git object with a message, author, and date |
+
+**`git show`** — displays the details of any git object including 
+commits, tags, and blobs.
+Basic syntax: `git show <object>`
+
+| Flag | Description |
+|------|-------------|
+| `--stat` | Show only filenames changed |
+| `--name-only` | Show only names of changed files |
+| `-q` | Quiet — suppress diff output |
+
+---
+
+### The Full Investigation Process
+When investigating a git repository for hidden information always 
+check these in order:
+
+1. `cat README.md` — read the obvious files first
+2. `git log` — check commit history for previous versions
+3. `git branch -a` — check all branches including remote ones
+4. `git tag` — check all tags
+5. `git stash list` — check stashed changes
+6. `git show <hash/tag>` — inspect specific commits or tags
+
+This level teaches that git has many places where data can be hidden beyond just the files themselves. In real penetration testing and bug bounty hunting, always thoroughly investigate every aspect of a git repository — commits, branches, tags, and stashes can all 
+contain sensitive information that developers thought was hidden or forgotten. Many real-world security incidents have involved credentials accidentally left in git tags or stashes.
+============================================================================================================================================================================================================================================================================================================
+
+**Level 31 - Level 32: There is a git repository at ssh://bandit31-git@bandit.labs.overthewire.org/home/bandit31-git/repo via the port 2220. The password for the user bandit31-git is the same as for the user bandit31.
+From your local machine (not the OverTheWire machine!), clone the repository and find the password for the next level. This needs git installed locally on your machine.
+
+password: fb5S2xb7bRyFmAvQYQGEqsbhVyJqhnDy
+
+                                                                                                                   
+┌──(kali㉿25029826)-[~]
+└─$ git clone ssh://bandit31-git@bandit.labs.overthewire.org:2220/home/bandit31-git/repo repo31
+Cloning into 'repo31'...
+                         _                     _ _ _   
+                        | |__   __ _ _ __   __| (_) |_ 
+                        | '_ \ / _` | '_ \ / _` | | __|
+                        | |_) | (_| | | | | (_| | | |_ 
+                        |_.__/ \__,_|_| |_|\__,_|_|\__|
+                                                       
+
+                      This is an OverTheWire game server. 
+            More information on http://www.overthewire.org/wargames
+
+backend: gibson-0
+bandit31-git@bandit.labs.overthewire.org's password: 
+remote: Enumerating objects: 4, done.
+remote: Counting objects: 100% (4/4), done.
+remote: Compressing objects: 100% (3/3), done.
+remote: Total 4 (delta 0), reused 0 (delta 0), pack-reused 0
+Receiving objects: 100% (4/4), done.
+                                                                                                                   
+┌──(kali㉿25029826)-[~]
+└─$ cd repo31
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo31]
+└─$ ls
+README.md
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo31]
+└─$ cat README.md
+This time your task is to push a file to the remote repository.
+
+Details:
+    File name: key.txt
+    Content: 'May I come in?'
+    Branch: master
+
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo31]
+└─$ echo "May I come in?" > key.txt
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo31]
+└─$ cat .gitignore
+*.txt
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo31]
+└─$ git add -f key.txt                                                                         
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo31]
+└─$ git config user.email "bandit31@bandit"
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo31]
+└─$ git config user.name "bandit31"
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo31]
+└─$ git commit -m "add key"                                                                    
+[master a5c690e] add key
+ 1 file changed, 1 insertion(+)
+ create mode 100644 key.txt
+                                                                                                                   
+┌──(kali㉿25029826)-[~/repo31]
+└─$ git push               
+                         _                     _ _ _   
+                        | |__   __ _ _ __   __| (_) |_ 
+                        | '_ \ / _` | '_ \ / _` | | __|
+                        | |_) | (_| | | | | (_| | | |_ 
+                        |_.__/ \__,_|_| |_|\__,_|_|\__|
+                                                       
+
+                      This is an OverTheWire game server. 
+            More information on http://www.overthewire.org/wargames
+
+backend: gibson-0
+bandit31-git@bandit.labs.overthewire.org's password: 
+Enumerating objects: 4, done.
+Counting objects: 100% (4/4), done.
+Delta compression using up to 4 threads
+Compressing objects: 100% (2/2), done.
+Writing objects: 100% (3/3), 310 bytes | 310.00 KiB/s, done.
+Total 3 (delta 0), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: ### Attempting to validate files... ####
+remote: 
+remote: .oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.
+remote: 
+remote: Well done! Here is the password for the next level:
+remote: 3O9RfhqyAlVBEZpVb6LYStshZoqoSx5K 
+remote: 
+remote: .oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.oOo.
+remote: 
+To ssh://bandit.labs.overthewire.org:2220/home/bandit31-git/repo
+ ! [remote rejected] master -> master (pre-receive hook declined)
+error: failed to push some refs to 'ssh://bandit.labs.overthewire.org:2220/home/bandit31-git/repo'
+                                                                                                                   
+#### Key Insight
+This level is different from the previous git levels — instead of 
+finding hidden information in the repository, we need to **push** a 
+file to the remote repository. The server validates the file we push 
+and if correct, returns the password for the next level in the push 
+response. There is also a `.gitignore` file that blocks `.txt` files 
+from being added — we need to force add our file to bypass it.
+
+---
+
+#### Step 1 — Clone the Repository
+From your local machine:
+```bash
+git clone ssh://bandit31-git@bandit.labs.overthewire.org:2220/home/bandit31-git/repo repo31
+cd repo31
+```
+
+---
+
+#### Step 2 — Read the README
+```bash
+cat README.md
+```
+Output:
+This time your task is to push a file to the remote repository.
+Details:
+File name: key.txt
+Content: 'May I come in?'
+Branch: master
+
+The task is clear — we need to create `key.txt` with the content 
+`May I come in?` and push it to the master branch.
+
+---
+
+#### Step 3 — Create the File
+```bash
+echo "May I come in?" > key.txt
+```
+**Why `echo "May I come in?" > key.txt`?** This creates a file called 
+`key.txt` with the exact content `May I come in?`. The `>` redirects 
+the output of `echo` into the file instead of printing it to the screen.
+
+---
+
+#### Step 4 — Check .gitignore
+```bash
+cat .gitignore
+```
+Output:
+*.txt
+
+**What is `.gitignore`?** A `.gitignore` file tells git which files 
+to ignore and not track. `*.txt` means all files ending in `.txt` are 
+ignored by git. This means if we try to `git add key.txt` normally, 
+git will refuse to add it because it matches the `.gitignore` pattern.
+
+---
+
+#### Step 5 — Force Add the File
+```bash
+git add -f key.txt
+```
+**Why `git add -f`?** Normally `git add` respects `.gitignore` and 
+refuses to add ignored files. The `-f` flag stands for `--force` — 
+it forces git to add the file even though it is listed in `.gitignore`. 
+Without `-f` the file would not be added and our push would be empty.
+
+---
+
+#### Step 6 — Configure Git Identity
+```bash
+git config user.email "bandit31@bandit"
+git config user.name "bandit31"
+```
+**Why configure git identity?** Git requires a username and email to 
+be set before making commits — it uses this information to record who 
+made each commit. Without this, git would throw an error when we try 
+to commit.
+
+---
+
+#### Step 7 — Commit the File
+```bash
+git commit -m "add key"
+```
+Output:
+[master a5c690e] add key
+1 file changed, 1 insertion(+)
+create mode 100644 key.txt
+
+**Why `git commit`?** A commit saves a snapshot of our changes to the 
+local repository. The `-m` flag specifies the commit message — a short 
+description of what was changed. Without committing first we cannot push.
+
+**Reading the output:**
+- `master a5c690e` — the commit was made on the master branch with 
+  hash `a5c690e`
+- `1 file changed, 1 insertion(+)` — one file was added with one 
+  new line
+- `create mode 100644 key.txt` — a new file was created with 
+  standard permissions
+
+---
+
+#### Step 8 — Push to Remote
+```bash
+git push
+```
+Output:
+remote: ### Attempting to validate files... ####
+remote: Well done! Here is the password for the next level:
+remote: 3O9RfhqyAlVBEZpVb6LYStshZoqoSx5K
+remote:
+! [remote rejected] master -> master (pre-receive hook declined)
+error: failed to push some refs
+
+**Why `git push`?** This uploads our local commits to the remote 
+repository on the bandit server. When the server receives our push 
+it runs a **pre-receive hook** — a script that validates the pushed 
+files before accepting them.
+
+**Why was the push rejected?** The server intentionally rejects the 
+push with `pre-receive hook declined` — it doesn't actually want us 
+to modify the repository permanently. But before rejecting it, the 
+hook validates our file, confirms it's correct, and prints the 
+password in the remote response. So even though the push failed, 
+we still got the password!
+
+---
+
+### Commands Used
+
+**`git add`** — stages files for the next commit.
+Basic syntax: `git add <file>`
+
+| Flag | Description |
+|------|-------------|
+| `-f` | Force add ignored files that match .gitignore patterns |
+| `-A` | Add all changed files including deletions |
+| `.` | Add all changes in current directory |
+| `-p` | Interactively choose which changes to stage |
+
+**`git commit`** — saves staged changes as a snapshot in the repository.
+Basic syntax: `git commit -m "message"`
+
+| Flag | Description |
+|------|-------------|
+| `-m` | Specify commit message inline |
+| `-a` | Automatically stage all modified files before committing |
+| `--amend` | Modify the most recent commit |
+| `--no-edit` | Keep the same commit message when amending |
+
+**`git push`** — uploads local commits to a remote repository.
+Basic syntax: `git push`
+
+| Flag | Description |
+|------|-------------|
+| `-f` | Force push — overwrite remote history |
+| `-u` | Set upstream tracking branch |
+| `--all` | Push all branches |
+| `--tags` | Push all tags |
+
+**`.gitignore`** — a file that tells git which files to ignore.
+Common patterns:
+| Pattern | Meaning |
+|---------|---------|
+| `*.txt` | Ignore all .txt files |
+| `*.log` | Ignore all .log files |
+| `/build` | Ignore the build directory |
+| `!important.txt` | Exception — don't ignore this specific file |
+
+**Pre-receive hook** — a script that runs on the server when it 
+receives a push. It can validate the pushed content and accept or 
+reject the push. In this level, the hook:
+1. Checks if `key.txt` exists with the content `May I come in?`
+2. Prints the next password if correct
+3. Rejects the push to keep the repository unchanged
+
+---
+
+### The Full Git Workflow
+This level demonstrates the standard git workflow:
+Create/edit files → git add (stage) → git commit (save locally)
+→ git push (upload to remote)
+
+This level teaches two important concepts:
+1. **`.gitignore` can be bypassed** with `git add -f`. In security assessments, never assume that files listed in `.gitignore` are actually safe — they can still be force-added and pushed.
+2. **Git hooks** are powerful server-side scripts that can validate, reject, or process pushes. In real-world DevOps, pre-receive hooks are used to enforce code quality, run tests, and prevent sensitive data from being pushed to repositories.
+================================================================================================================================================================================================================================================================================
+
+**Level 32 - Level 33: After all this git stuff, it’s time for another escape. Good luck!
+
+ssh -v bandit32@bandit.labs.overthewire.org -p 2220
+password: 3O9RfhqyAlVBEZpVb6LYStshZoqoSx5K
+
+WELCOME TO THE UPPERCASE SHELL
+>> $0
+$ ls
+uppershell
+$ cat /etc/bandit_pass/bandit33
+tQdtbs5D5i2vJwkO8mEyYEyTL8izoeJ0
+$ 
+
+#### Key Insight
+This level introduces a **restricted shell** called the UPPERCASE SHELL. 
+When you log in as bandit32, instead of a normal bash shell you are 
+dropped into a custom shell that converts everything you type to 
+UPPERCASE before executing it. Since Linux commands are case sensitive, 
+`ls` works but `LS` does not — making the shell seemingly unusable. 
+The trick is to use special shell variables that cannot be converted 
+to uppercase to escape into a normal shell.
+
+---
+
+#### Step 1 — Log into bandit32
+```bash
+ssh bandit32@bandit.labs.overthewire.org -p 2220
+```
+When logged in you see:
+WELCOME TO THE UPPERCASE SHELL
+
+This is not a normal bash shell — it's a custom restricted shell that 
+uppercases all input.
+
+---
+
+#### Step 2 — Understanding the Problem
+If you try to type any normal command:
+
+
+ls
+
+
+The shell converts it to `LS` which is not a valid command and returns 
+an error. The same happens with any lowercase command — `cat`, `pwd`, 
+`whoami` all become `CAT`, `PWD`, `WHOAMI` which don't exist.
+
+So how do we run commands? We need something that stays the same 
+whether it's uppercase or lowercase — **special shell variables**.
+
+---
+
+#### Step 3 — Escaping with $0
+
+$0
+
+Output:
+$
+
+**Why `$0`?** In bash `$0` is a special variable that contains the 
+name or path of the currently running shell or script. When typed in 
+the UPPERCASE shell:
+- `$0` cannot be converted to uppercase because `$` and `0` are not 
+  letters — they stay as `$0`
+- The shell executes `$0` which refers to the current shell process
+- This effectively re-launches the shell — but since the underlying 
+  shell is `/bin/sh` or `/bin/bash`, it drops us into a normal 
+  interactive shell
+
+The `$` prompt confirms we are now in a normal shell as bandit33!
+
+**Why does this work?** The UPPERCASE shell is itself running inside 
+a normal shell process. When we execute `$0` we are telling the shell 
+to run itself again — but this time as a normal shell without the 
+uppercase restriction. It's like escaping a cage by using the cage's 
+own door.
+
+---
+
+#### Step 4 — Verify we are in a Normal Shell
+```bash
+ls
+```
+Output:
+uppershell
+`ls` works now confirming we are in a normal shell! We can also see 
+the `uppershell` binary — this is the custom uppercase shell program 
+that was restricting us.
+
+---
+
+#### Step 5 — Read the Password
+```bash
+cat /etc/bandit_pass/bandit33
+```
+Since we are now running as bandit33 (the uppershell binary is setuid), 
+we can read bandit33's password directly.
+
+---
+
+### Commands and Concepts Used
+
+**`$0`** — a special shell variable that holds the name or path of 
+the current shell or script being executed.
+
+Special shell variables:
+| Variable | Meaning |
+|----------|---------|
+| `$0` | Name/path of the current shell or script |
+| `$1, $2...` | Command line arguments passed to the script |
+| `$#` | Number of arguments passed |
+| `$?` | Exit status of the last command |
+| `$$` | Process ID (PID) of the current shell |
+| `$!` | PID of the last background process |
+| `$@` | All arguments as separate words |
+| `$*` | All arguments as a single word |
+
+These variables are special because they use `$` and numbers/symbols 
+which cannot be converted to uppercase — making them perfect for 
+escaping restricted shells that only block lowercase letters.
+
+---
+
+### What is a Restricted Shell?
+A restricted shell limits what commands a user can run. Common 
+restrictions include:
+- Blocking certain commands
+- Preventing directory changes
+- Converting input to uppercase (like this level)
+- Only allowing a whitelist of commands
+
+Restricted shells are used in:
+- Kiosk systems where users should only run specific programs
+- Honeypots to trap attackers
+- CTF challenges like this one
+- Jails for untrusted users
+
+### Common Shell Escape Techniques
+When faced with a restricted shell, these are common escape methods:
+
+| Method | How it works |
+|--------|-------------|
+| `$0` | Re-executes the current shell without restrictions |
+| `vi/vim` | Use `:shell` to spawn a shell from within vim |
+| `python -c 'import os; os.system("/bin/bash")'` | Spawn shell via python |
+| `perl -e 'exec "/bin/bash"'` | Spawn shell via perl |
+| `bash -i` | Force an interactive bash shell |
+| `sh` | Try launching a simpler shell |
+
+### Why the Uppercase Shell Fails
+The UPPERCASE shell works by:
+1. Reading your input
+2. Converting it to uppercase using something like `tr 'a-z' 'A-Z'`
+3. Executing the uppercased command
+
+This blocks all lowercase commands but fails against:
+- Numbers (`$0`, `$1`) — not affected by case conversion
+- Symbols (`$`, `!`, `@`) — not affected by case conversion
+- Already uppercase input — but Linux has no uppercase commands
+
+---
+
+### The `uppershell` Binary
+The `uppershell` file we see with `ls` is the actual program that implements the UPPERCASE shell. It is a setuid binary owned by bandit33 — which is why after escaping with `$0` we have bandit33's permissions and can read `/etc/bandit_pass/bandit33` directly.
+
+This level teaches that restricted shells are often not as secure as they appear. Special variables like `$0` that use non-alphabetic characters can bypass case-based restrictions. In real penetration testing, escaping restricted shells is a common technique — always look for ways to use the shell's own features against its restrictions. The key insight is that numbers and symbols are immune to case conversion, making special variables powerful escape tools.
+=========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================
+
+**Level 33 - Level 34: At this moment, level 34 does not exist yet.**
+
+## Will be updated once the level is released.
