@@ -10,6 +10,8 @@ c) Lab Setup
 (Updating as I progress)
 
 Offensive Security: Focuses on testing and identifying vulnerabilities within systems, networks, and applications.
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Basic Cybersecurity Concepts:
 ============================
@@ -62,6 +64,8 @@ Vulnerability - A weakness or flaw in a system that allows a threat to cause har
 9) Cyber Kill Chain:
     A model that outlines the stages of a cyberattack - from planning to execution. Helps security teams understand and disrupt attacks at each stage.
       (1) Reconnaissance => (2) Weaponization => (3) Delivery => (4) Exploitation => (5) Installation => (6) C2 => (7) Actions on Objective.
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 Basic Hardware components:
@@ -76,13 +80,17 @@ NIC - Network Interface Card: Enables wired or wireless network connections. Giv
 Input Devices - Keyboard, mouse: how the user interacts with and gives instructions to the computer.
 Output Devices - Monitor, printer, speakers - how the computer delivers results back to the user.
 PSU & Cooling - The power supply unit converts AC to DC power. Cooling systems prevent overheating.
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Software Components:
 ===================
 OS - Operating System: Core software managing hardware, UI, and software interactions. eg: Windows, macOS, Linux
 Device Drivers - OS <-> Hardware bridge: Allows the OS to communicate with hardware components such as GPU or printer drivers.
 Firmware - Embedded Software: Permanent software embedded into hardware (like BIOS). Manages low-level startup operations.
-Applications - User-facing software: Programs for user tasks - word processors, web browsers, games, security tools
+Applications - User-facing software: Programs for user tasks - word processors, web browsers, games, security tools.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 BIOS (Basic Input/Output System):
 =================================
@@ -92,6 +100,8 @@ Hardware initialization - Configures and prepares CPU, RAM, and storage devices 
 POST - Power-On Self-Test: Checks that all essential hardware is functioning before handing off to the OS
 Boot Device Selection - Determines the order to try boot devices - HDD, USB, CD/DVD - to load the OS.
 BIOS Setup Utility - User interface to configure hardware settings - time, boot order, and hardware parameters.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 BIOS vs UEFI:
 =============
@@ -111,6 +121,8 @@ UEFI:
 -> Faster boot times
 -> Secure Boot — blocks bootkit malware
 -> Network capabilities for remote boot
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Windows Basics:-
 ================
@@ -163,6 +175,8 @@ File and Folder Operations:
 => Delete - Send to Recycle Bin (recoverable) or permanently delete.
 
 Properties ==> right-click -> Properties: view type, size, permissions, metadata
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 Linux Basics:
@@ -186,7 +200,7 @@ Different Linux distributions are tailored for specific uses — from general pu
 
 Desktop Environments (GUI):
 ---------------------------
-At its core Linux is a command-line OS. However, Desktop Environments (DEs) add a graphical layer on top. DEs are separate from the distro — you can swap them independently.
+At its core, Linux is a command-line OS. However, Desktop Environments (DEs) add a graphical layer on top. DEs are separate from the distro — you can swap them independently.
 => GNOME - Intuitive and modern design. Default on Ubuntu and Fedora.
 => KDE Plasma - Highly customizable and feature-rich. Windows-like feel.
 => XFCE - Lightweight and efficient. Suitable for older or low-resource hardware.
@@ -197,7 +211,7 @@ Most Linux systems use the Ext4 filesystem. One of Linux's core philosophies is:
 
 / Root — top-level directory, everything branches from here
 ├── /home Personal directories for each user (e.g. /home/kali)
-├── /bin Essential user binaries / executables (ls, cp, mv…)
+├── /bin Essential user binaries/executables (ls, cp, mv…)
 ├── /etc System-wide configuration files and settings
 ├── /var Variable files — logs, databases, caches
 ├── /tmp Temporary files, cleared on reboot
@@ -239,7 +253,7 @@ Essential Commands to Master:
 => cp - Copy files and directories.
 => mv - Move or rename files and directories.
 => rm - Remove files and directories.
-=> chmod - Change file permissions (e.g. chmod 640).
+=> chmod - Change file permissions (e.g., chmod 640).
 => chown - Change file owner and group.
 => ls -l - List files with full permission details
 
@@ -259,3 +273,204 @@ YUM / DNF (Red Hat-based: CentOS, Fedora):-
 
 Windows vs Linux software compatibility:-
 Some apps are cross-platform (VS Code, Chrome, Audacity, 7-Zip). But natively, Windows uses .exe / .msi while Linux uses .deb (Debian) or .rpm (Red Hat). They are not directly compatible.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+OS Terminology:
+===============
+1) Services & Daemons:
+----------------------
+Background programs that run continuously without direct user interaction, performing tasks like managing hardware, providing network services, or handling scheduled jobs.
+
+Services (Windows) vs Daemons (Linux):
+---------------------------------------
+
+Windows:                                                        
+        Services 
+=> Background programs called Services
+=> Managed by the Windows Service Manager
+=> Run without any user interaction
+=> Examples: Windows Update, Print Spooler, Windows Defender
+
+Linux:
+        Daemons
+=> Background processes called Daemons
+=> Managed by systemd or init
+=> Run without any user interaction
+=> Examples: sshd, httpd, cron
+
+2) Processes:
+--------------
+A process is an individual instance of a program currently in execution. Every running application — browser, terminal, antivirus — is a process. Each process is assigned a unique Process ID (PID) by the OS and can be monitored, started, stopped, or killed.
+Windows:-
+---------
+=> Task Manager - GUI tool to view and manage running processes
+=> tasklist - CMD command - list all running processes
+=> taskkill - CMD command - terminate a process by PID or name
+
+Linux:
+------
+=> ps - snapshot of current running processes
+=> top / htop - Real-time live view of running processes and resource usage.
+=> kill - Terminate a process using its PID
+
+3) Threads:
+------------
+A thread is a sub-unit of a process. A single process can have multiple threads running concurrently — this is called multithreading. Threads share the same memory space as the parent process, enabling faster parallel execution of tasks within a program. Both Windows and Linux support multithreading.
+Windows:
+--------
+=> Threads are managed within each process
+=> Monitored through Task Manager
+
+Linux:
+------
+=> Threads managed similarly within processes
+=> Observed with ps -T or htop
+
+Process vs Thread: A process is a full, independent program instance with its own memory. A thread is a lightweight unit of execution inside a process — multiple threads share the same memory and resources of their parent process.
+
+4) File Permissions:
+---------------------
+Both Windows and Linux use file permissions to control what users can do with files — read, write, or execute. Permissions protect sensitive data and ensure only authorized users can access or modify system files.
+Windows:
+--------
+-> Managed through the NTFS filesystem
+-> Viewed via right-click -> Properties -> Security tab
+-> Permissions: Full Control, Modify, Read & Execute, Read, Write
+
+Linux:
+------
+-> Managed with chmod, chown, ls -l
+-> Permissions split into: user, group, others
+-> Permissions: read(r), write(w), execute (x)
+
+5) Environment Variables:
+--------------------------
+Environment Variables are dynamic values stored in the OS that contain system and user-specific configurations — such as file paths, system settings, and application preferences. Programs use them to find resources without needing hardcoded paths.
+windows:
+---------
+-> Set with the 'set' command in CMD.
+-> Also configurable via System Properties -> Advanced -> Environment Variables
+-> Key variable: %PATH% - directories where executables are found.
+
+Linux:
+-------
+-> set with export VAR=value
+-> View all variables with env
+-> Persisted in ~/.bashrc or /etc/environment
+-> Key variable: $PATH - same concept as Windows %PATH%
+PATH is the most important environment variable — it tells the OS where to look for programs when you type a command. Without the correct PATH, the OS won't find your tools, scripts, or executables.
+
+6) User Accounts & Permissions:
+--------------------------------
+Both OSes use user accounts to control who can do what on a system. There are different privilege levels — standard users have limited access, while administrators/root have full control.
+Windows:
+--------
+-> Standard User: Limited access, no system changes
+-> Administrator: Full system control
+-> UAC (User Account Control): prompts for confirmation when actions require elevated privileges
+-> Even admins must confirm via UAC prompt before elevated actions.
+
+Linux:
+-------
+-> Standard User: Limited to own home directory and allowed resources
+-> Root: The super user with unrestricted access to everything
+-> sudo: temporarily elevate privileges for a single command without fully switching to root
+-> su: switch to another user account entirely.
+
+Security note for hackers: Privilege escalation — the act of gaining higher permissions than originally granted — is one of the most important post-exploitation techniques in offensive security. Understanding how Windows UAC and Linux sudo/root work is fundamental to this.
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Networking Basics:
+===================
+1) What is a Network?
+A network is a group of connected devices that communicate and share resources like files, internet access, and printers. Common examples include home Wi-Fi, office networks, and the internet itself. Networks enable easy sharing of information, remote communication, and internet access.
+
+2) Types of Networks:
+---------------------
+=> LAN (Local Area Network) - Small network covering a local area — home, school, or office.
+=> WAN (Wide Area Network) - Large network spanning cities, countries, or the world. The internet is a WAN.
+=> MAN (Metropolitan Area Network) - Covers a city or campus — larger than LAN, smaller than WAN.
+=> PAN (Personal Area Network) - Short-range network — e.g., Bluetooth between phone and speaker.
+
+3) IP Addresses:
+----------------
+An IP Address is a unique identifier for each device on a network, like a "home address" for devices. It tells the network where to send data.
+IPV4 - The most commonly used format. Written as four numbers separated by dots - like this 192.168.1.1
+IPV6 - Newer, longer format created to support the ever-growing number of connected devices - like this 2001:0db8:85a3::8a2e:0370:7334
+
+Private IPs - For internal use only — home and office networks. Not routable on the public internet.
+Public IPs - Used on the internet to uniquely identify devices globally. Assigned by your ISP.
+
+4) IP Addressing Types & DHCP:
+-------------------------------
+=> Static IP - Fixed. Manually assigned. Never changes. Used for servers, printers, and network devices
+=> Dynamic IP - Temporary. Assigned from a pool of addresses. Typically, changes with each new connection.
+=> DHCP - Auto-assignment. Dynamic Host Configuration Protocol - automatically assigns IP addresses to devices on a network, simplifying setup.
+
+5) MAC Addresses:
+------------------
+Media Access Control (MAC) Address - A unique, fixed identifier assigned to a device's network hardware by the manufacturer. Unlike IP addresses, a MAC address does not change. It operates at Layer 2 (Data Link Layer) and is used to identify specific devices on a local network — even when their IP addresses change.
+
+                -----------------------------
+                |   page 101 diagram comes                        |
+
+ IP vs MAC: IP address = your home address (can change). MAC address = your fingerprint (permanent, hardware-level).
+
+6) Network Protocols:
+---------------------
+A protocol is a set of rules that allows devices to communicate effectively on a network, ensuring data is sent and received correctly. The primary protocol suite is TCP/IP.
+
+Protocol                Layer                Purpose
+TCP/IP                Layer 3 & 4         Core Internet Protocol Suite. IP routes packets; TCP ensures reliable, ordered delivery.
+HTTP                  Layer 7             enables web browsing — transferring web page data between the browser and the server.
+HTTPS                 Layer 7             Secure version of HTTP — encrypts data for privacy, used on sensitive sites.
+FTP                   Layer 7             File Transfer Protocol — uploads/downloads files between computers on a network.
+SMTP                  Layer 7             Simple Mail Transfer Protocol — sends and routes emails over the internet.
+
+7) The OSI Model (7 Layers):
+----------------------------
+The OSI (Open Systems Interconnection) model defines the 7 layers that network traffic moves through between two endpoints. Data travels down the layers on the sender's side and up the layers on the receiver's side.
+7 - Application: User-facing layer — where applications send/receive data. Protocols: HTTP, FTP, SMTP, DNS.
+    FTP data & commands
+6 - Presentation: Formats, encodes, and optionally encrypts data so both sides can understand it.
+    Data encoding/Encryption
+5 - Session: Manages and maintains the connection/session between sender and receiver.
+    Session Management
+4 - Transport: Breaks data into segments, ensures reliable delivery, handles sequencing. Protocols: TCP, UDP. Adds source/destination ports (e.g. FTP: port 21/20).
+    TCP Header — ports, sequencing
+3 - Network: Routes packets across networks using IP addresses. Protocol: IP. Like a GPS for your data.
+    IP Header - source & destination IP
+2 - Data Link: Transfers data between adjacent devices on the same network using MAC addresses. Adds frame headers and error-checking trailers.
+    Frame — MAC addresses + error check
+1 - Physical: Converts data into physical signals — electrical pulses (Ethernet cable) or radio waves (Wi-Fi) — for transmission over physical media.
+    Electrical / Wireless signal
+
+How data flows: Sender builds the packet from Layer 7 → Layer 1 (encapsulation). Receiver decodes from Layer 1 → Layer 7 (de-encapsulation).
+
+8) Packets & Frames:
+---------------------
+Packet — Layer 3: Unit of data at the Network Layer. Contains a header with source/destination IP addresses and the actual data payload. Used when discussing IP routing.
+Frame — Layer 2: Unit of data at the Data Link Layer. Contains source/destination MAC addresses and error-checking data. Encapsulates the packet for local network transmission.
+
+All data sent over a network is divided into packets/frames. Multiple packets are transmitted and the receiving computer reassembles them in the correct order to reconstruct the original message.
+
+9) Basic Network Devices:
+-------------------------
+=> Router - Directs traffic between networks and connects them to the internet. Operates at Layer 3.
+=> Switch - Connects multiple devices within the same local network, managing data flow. Operates at Layer 2.
+=> Modem - Connects your local network to the internet through your ISP (Internet Service Provider).
+
+10) DNS (Domain Name System):
+------------------------------
+The "Phonebook" of the Internet
+DNS translates human-readable domain names (like google.com) into IP addresses (like 142.250.70.78) that computers understand. Without DNS, you would need to memorize IP addresses to visit any website.
+
+11) Basic Network Security:
+----------------------------
+=> Firewall - The "security guard" of your network — monitors and filters incoming/outgoing traffic, blocking unauthorized access.
+=> Encryption - Scrambles data so only those with the correct key can read it. Essential for securing data in transit.
+=> WPA2/WPA3 - encryption standards that protect Wi-Fi networks, ensuring only authorized users can connect.
+
+
