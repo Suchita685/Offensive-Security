@@ -413,8 +413,7 @@ Public IPs - Used on the internet to uniquely identify devices globally. Assigne
 ------------------
 Media Access Control (MAC) Address - A unique, fixed identifier assigned to a device's network hardware by the manufacturer. Unlike IP addresses, a MAC address does not change. It operates at Layer 2 (Data Link Layer) and is used to identify specific devices on a local network — even when their IP addresses change.
 
-                -----------------------------
-                |   page 101 diagram comes                        |
+         <img width="465" height="221" alt="Image" src="https://github.com/user-attachments/assets/d02a9291-4d0a-4ae5-b534-7efce5dbeed2" />
 
  IP vs MAC: IP address = your home address (can change). MAC address = your fingerprint (permanent, hardware-level).
 
