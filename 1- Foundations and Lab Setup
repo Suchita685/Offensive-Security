@@ -413,7 +413,12 @@ Public IPs - Used on the internet to uniquely identify devices globally. Assigne
 ------------------
 Media Access Control (MAC) Address - A unique, fixed identifier assigned to a device's network hardware by the manufacturer. Unlike IP addresses, a MAC address does not change. It operates at Layer 2 (Data Link Layer) and is used to identify specific devices on a local network — even when their IP addresses change.
 
-         <img width="465" height="221" alt="Image" src="https://github.com/user-attachments/assets/d02a9291-4d0a-4ae5-b534-7efce5dbeed2" />
+                                 Media Access Control Address
+
+                        ---------------------------------------------------------------------------------------------
+                        | 00    |    0A   |         95        |        9D       |        67        |        16       |                                       
+                        |-------|---------|-------------------|-----------------|------------------|-----------------|                                                    
+                           Organizationally unique identifier       Network Interface Controller Specific                                                  
 
  IP vs MAC: IP address = your home address (can change). MAC address = your fingerprint (permanent, hardware-level).
 
@@ -471,5 +476,480 @@ DNS translates human-readable domain names (like google.com) into IP addresses (
 => Firewall - The "security guard" of your network — monitors and filters incoming/outgoing traffic, blocking unauthorized access.
 => Encryption - Scrambles data so only those with the correct key can read it. Essential for securing data in transit.
 => WPA2/WPA3 - encryption standards that protect Wi-Fi networks, ensuring only authorized users can connect.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+Introduction to Cryptography:
+=============================
+Cryptography is the practice of securing information by transforming it into an unreadable format, allowing only authorised users to convert it back into a readable format.
 
+1) Purpose:
+------------
+=> Confidentiality - Information is accessible only to those authorised to view it.
+=> Integrity - Protects data from being altered or tampered with.
+=> Authentication - Verifies the identity of users and systems involved in communication.
+=> Non-repudiation - Senders cannot deny sending a message; recipients cannot deny receiving it.
+
+2) Basic Terminology:
+----------------------
+=> Plaintext - The original, readable data before encryption is applied.
+=> Ciphertext - The encrypted, unreadable data after a cryptographic algorithm is applied.
+=> Key - A piece of information used in the encryption and decryption process, essential for securing data.
+
+Plaintext + key => Algorithm => Ciphertext => Key => Plaintext
+
+3) Types of cryptography - overview:
+-------------------------------------
+There are 3 main types. Each serves a different purpose in securing data:
+=> Symmetric Cryptography - Uses the same key for both encryption and decryption. Example: AES (Advanced Encryption Standard).
+=> Asymmetric Cryptography - Uses a pair of keys — one public, one private — for encryption and decryption. Example: RSA (Rivest-Shamir-Adleman).
+=> Hash Functions - Algorithms that transform data into a fixed-size string of characters. One-way only — cannot be reversed. Example: SHA-256 (Secure Hash Algorithm).
+
+4) Symmetric cryptography - in depth:
+--------------------------------------
+Same key for encrypt + decrypt
+Both the sender and recipient share the same key. The sender encrypts the plaintext with the key to produce ciphertext; the recipient uses the same key to decrypt it back to plaintext.
+
+Example Algorithm: AES — Advanced Encryption Standard
+
+Sender -> Plaintext -> Shared key -> ciphertext -> Shared key -> Decrypted plaintext -> Recipient
+
+Key characteristics:
+=> Speed - Generally faster than asymmetric encryption and requires less computational power — efficient for large amounts of data.
+=> Weakness - Requires secure sharing and storage of the single key. If the key is intercepted, anyone can decrypt the data.
+=> Common use cases - Encrypting bulk data in storage (e.g., database encryption) and during data transfer within secure channels.
+
+5) Asymmetric cryptography - in depth:
+---------------------------------------
+Public key encrypts · private key decrypts
+Uses a pair of keys. The public key is shared openly and used to encrypt data. The private key is kept secret and used to decrypt it. Only the recipient who holds the private key can read the message.
+
+Example Algorithm: RSA — Rivest-Shamir-Adleman
+
+Sender -> Plaintext -> Public key -> Ciphertext -> Private key -> Decrypted plaintext -> Recipient
+
+Key characteristics:
+=> Speed - Slower and more resource-intensive due to complex mathematical operations. Best suited for smaller data sizes or for securely exchanging symmetric keys.
+=> Security Advantage - More secure for data exchange — only the public key needs to be shared, while the private key remains confidential. The two-key system reduces the risk associated with key exchange.
+=> Common use cases - Secure key exchange, digital signatures, and certificates, as well as establishing secure connections (e.g. SSL/TLS).
+
+6) Hash functions - in depth:
+------------------------------
+One-way · no key · fixed output
+Algorithms that take any input and transform it into a fixed-size string of characters. Unlike encryption, hashing is irreversible — you cannot get the original data back from a hash.
+
+Example Algorithm: SHA-256 — Secure Hash Algorithm (always produces a 256-bit hash)
+
+Plaintext (any size) -> SHA-256 hash function -> f7ff9e8b7b2e09b709…
+
+3 Core Properties:
+=> One-way function - Hashing is irreversible. Once data is transformed into a hash, it is practically impossible to revert it to its original form.
+=> Fixed output size - Regardless of the size of the input data, hashing always produces a fixed-length output. SHA-256 always produces a 256-bit hash — useful for data integrity checks.
+=> Deterministic - The same input will always produce the same hash output. Even a tiny change in the input yields a completely different hash — critical for verifying data integrity.
+
+           Property                        Symmetric                                Asymmetric                                        Hashing
+           --------                        ----------                               -----------                                       -------
+1)         Keys used                       1 shared key                             Public + private pair                             no key
+2)         Reversible?                     Yes (with key)                           Yes (with private key)                            No - One-way only
+3)         Speed                                Fast                                       Slow                                       Very fast
+4)         Data size                       Good for bulk data                        Best for small data/key exchange                 Any size -> fixed output
+5)         Main risk                       Key interception                          Resource-intensive                               Cannot decrypt - integrity only
+6)         Use cases                       Database encryption, secure channels      SSL/TLS, digital signatures, certificates        Password storage, data integrity checks
+7)         Example                                 AES                                          RSA                                                SHA-256
+
+ Hacker relevance: Understanding cryptography is essential for offensive security — cracking weak keys (symmetric), exploiting poor key management (asymmetric), and identifying hash collisions are all real attack vectors.
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Introduction to Shell commands & Scripting:
+===========================================
+1) What are shell commands?
+----------------------------
+Shell commands are specific instructions entered into a CLI or terminal that control the operating system or interact with files and applications. Unlike GUIs (which use buttons and icons), CLIs use text commands for operations.
+Purpose: Allow quick execution of routine tasks and control of the computer without a graphical interface.
+
+CLI vs Terminal — what's the difference?
+CLI / Shell: The interface itself — you type text commands to perform tasks. No graphical elements. Examples: Bash, PowerShell.
+Terminal: The application that gives you access to the CLI. Think of it as the door. Examples: Windows Terminal, GNOME Terminal, Terminal.app (macOS), Command Prompt.
+
+For offensive security, a CLI or Terminal provides a method to control the operating system and create scripts. Most hacking tools run purely from the CLI.
+
+2) What is scripting?
+----------------------
+Writing code to automate tasks. Scripts combine multiple commands with logic (loops, conditionals, functions) to automate workflows, perform calculations, and manipulate data efficiently — more powerful than individual commands.
+Scripts are used to:
+=> Save time - Automate repetitive tasks instead of typing them manually each time.
+=> Reduce errors - Automated workflows are consistent — no typos or missed steps.
+=> Simplify complexity - Complex multi-step tasks become a single concise script.
+
+3) Basic CLI concepts:
+-----------------------
+=> Prompt - A symbol indicating the system is ready to receive commands. Shows the current directory and username.
+$ in Unix/Linux and > in Windows
+=> Commands - Instructions that tell the computer to perform specific actions. Each follows a specific syntax that may include options and arguments.
+
+4) Common command-line operations
+----------------------------------
+Navigating directories:-
+=> cd [directory] - Change to a specified directory
+=> pwd - Print the current working directory — shows your location in the file system
+
+Listing files:-
+=> ls - Show files and folders in the current directory (Linux/Mac)
+=> dir - Show files and folders in the current directory (Windows)
+
+Creating and managing files & directories:-
+=> mkdir [dir] - Create a new directory
+=> touch [file] - Create a new file (Linux/Mac)
+=> echo. > [file] - Create a new file (Windows)
+=> rm [file] - Delete a file — irreversible, use with caution!
+=> rmdir [dir] - Remove an empty directory
+
+Flags and parameters:-
+Commands accept additional options called flags to modify behaviour.
+Example: ls -l — provides a detailed list including permissions, ownership, and file size.
+
+Command history and autocompletion:-
+Command history - Use ↑ / ↓ arrow keys to navigate previously entered commands. Saves time and increases efficiency.
+Autocompletion - Press Tab to autocomplete commands or file names. Reduces typographical errors and speeds up entry.
+
+Redirecting and piping:-
+cmd > file.txt  => Save command output to a file. Example: ls > filelist.txt -> this will save the list of files in the current directory to the filelist.txt
+cmd1 | cmd2 => Pipe output of one command into another. Example: ls | grep 'txt' -> this lists only the text files from the current directory
+
+Getting help:-
+man [command] => Open manual page for a command — detailed info (Linux)
+[cmd] --help => Quick info about command usage and options
+
+5) Common scripting languages:
+-------------------------------
+=> Python - Readable, widely used across fields.Use cases: Data analysis, automation, web scraping.
+=> Bash - Unix/Linux system tasks.Use cases: File management, backups, system monitoring.
+=> CMD - Default Windows shell. Use cases: Basic file ops, batch file creation, network diagnostics.
+=> PowerShell - Powerful Windows scripting (cross-platform via PS Core). Use cases: Task automation, configuration management.
+
+Differences:-
+Property                      Bash                                Python                               CMD                        Powershell
+Syntax                     Concise, Unix-focused                General-purpose                     Simple commands              Object-oriented
+OS                         Unix/Linux                           All platforms                       Windows                      Windows (+ cross-platform)
+Best for                   System-level tasks                   Versatile (web, data science)       System-level tasks           Windows system management
+
+Similarities:-
+=> Automation focus - All four can automate tasks like file manipulation and system monitoring.
+=> Control structures - All support loops and conditionals.
+=> File operations - Each can create, delete, and modify files — syntax differs.
+=> Environment access - All access environment variables and manage OS resources.
+
+6) Environment variables & PATH:
+---------------------------------
+Variables like PATH store system paths for quick command access. Commonly used in scripts to define file paths and configuration settings.
+
+Windows search order (when searching for a file or application):-
+Current directory of the binary -> current directory of the user -> System directories -> Windows directory -> Current directory of the user -> PATH folders
+
+If the right folders are not included in PATH, your program will not be found. PATH is a vital system variable — understanding it is essential for tool setup and privilege escalation research.
+
+7) Basic script syntax - variables, data types, comments:
+----------------------------------------------------------
+variables - storing reusable values. Example: name="John"
+        Python:      message = "Hello, World!"
+        Bash:        message="Hello, World!"
+        CMD:         set message="Hello, World!"
+        PowerShell:  $message = "Hello, World!"
+
+Data types - Simple types like string, int, and boolean, allowing scripts to handle text, numbers, and logic.
+        String - A sequence of characters that represents text. Often used for storing and manipulating textual data. Example: "Hello, world!" or 'Python'
+        Integer - A whole number, which means a numeric value without decimals. Can be both positive and negative. Example: 42 or -7
+        Float - Represents numbers with decimal points. Often used for precision in calculations. Example: 3.14 or -0.001
+        boolean - Can hold only two values: True or False. Used in logical conditions and control flow. Example: True or False
+        List (or Array) - A structured collection of elements that can contain different data types. Often dynamic - can add or remove elements. Example: [1,2,3,4] or ['apple','banana','cherry']
+        Dictionary (or hashmap) - Collection of key-value pairs, where each key is unique and corresponds to a value. Used to store associated data. Example: {'name':'Alice','age':30,'city':'Amsterdam'}
+
+Comments - Notes within code, ignored by the interpreter, improve readability. Example: # This is a comment in Python
+        Python: # This is a single-line comment.
+                " " "
+                This is a
+                multi-line comment
+                " " "
+        Bash: # This is a single-line comment
+        CMD: REM This is a single-line comment
+        Powershell: # This is a single-line comment
+                    <#
+                    This is a
+                    multi-line comment
+                    #>
+
+8) Control Structures:
+-----------------------
+=> Conditionals: if-else statements execute code based on specific conditions. Bash example: if [ "$age" -gt 18 ]; then echo "Adult"; fi
+=> Loops: Repeat tasks with for or while loops. Bash example: for i in {1..5}; do echo $i; done
+=> Functions: Group code blocks to reuse logic. Python example: def greet(): print("Hello!")
+
+9) Putting it together - full Python script example
+This script from the course combines functions, conditionals, input, and data types. Read through it and try to understand each part.
+
+# Function to greet the user and check voting eligibility
+def greet_user(name, age):
+    # Print a greeting message
+    print(f"Hello, {name}! Welcome to our program.")
+
+    # Check if the user is eligible to vote
+    if age >= 18:
+        print("You are eligible to vote!")
+    else:
+        print("You are not eligible to vote yet.")
+
+# Main program execution starts here
+if __name__ == "__main__":
+    # Prompt the user for their name
+    user_name = input("Please enter your name: ")   # String
+
+    # Prompt the user for their age
+    user_age = input("Please enter your age: ")      # String input
+
+    # Convert the age to an integer
+    user_age = int(user_age)                          # Integer conversion
+
+    # Call the function with user input
+    greet_user(user_name, user_age)
+
+Concepts used in this script:
+-> Function definition: def greet_user(name, age) — defines a reusable block with parameters.
+-> Conditional: if age >= 18 — branches execution based on a condition.
+-> Input & data types: input() always returns a String. int() converts it to an Integer for comparison.
+-> Entry point: if __name__ == "__main__" — ensures the main block only runs when executed directly.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Virtualization & Cloud basics:
+==============================
+1) What is Virtualization?
+--------------------------
+Process of creating virtual versions of physical resources, such as servers, storage devices, or networks. By allowing multiple virtual environments to run on a single physical machine,
+Virtualization maximizes hardware utilization and provides flexibility in resource management.
+
+------------                                                               --------         ------------
+Application |                                                              |  App |         |   App    |
+------------                                                               --------         ------------
+-----                                                                      --------         ------------
+OS  |                                                                      |  OS  |         |    OS    |
+-----                                                                      --------         ------------
+-------------                                                              ------------------------------
+Hardware    |                                                              |   Virtualization Layer     |    
+-------------                                                              ------------------------------
+Traditional Machine architecture                                           ------------------------------
+                                                                           |           Hardware          |
+                                                                           ------------------------------
+                                                                             Virtual Machine Architecture
+
+2) Types of Virtualization:
+----------------------------
+=> Server virtualization - Running multiple instances on a single physical server, improving resource efficiency and management
+=> Desktop virtualization - Creating virtual desktops that can be accessed from various devices, enabling remote work and centralized management
+=> Application virtualization - Running applications in a virtual environment separate from the underlying operating system, allowing for easier deployment and compatibility.
+=> Network virtualization - Abstracting network resources to create a virtual network, enhancing network flexibility and scalability
+
+3) Benefits of virtualization:
+------------------------------
+=> Resource efficiency - Better utilization of physical hardware resources, reducing waste.
+=> Cost savings - Decreased hardware and operational costs by consolidating resources.
+=> Scalability - Easily scale resources up or down based on demand, providing flexibility for growth.
+=> Isolation - Improved security and stability by isolating environments, minimizing the impact of failures.
+
+4) Hypervisors:
+----------------
+Software that enables virtualization by allowing multiple OS to run on a single physical machine.
+Types:
+-> Type 1 (Bare-metal): Runs directly on the hardware (e.g, VMware vSphere, Microsoft Hyper-V)
+-> Type 2 (Hosted): Runs on top of an existing OS (e.g, Oracle VirtualBox)
+
+Role: Manage VMs, allocate resources, and ensure isolation between environments.
+
+5) Virtual Machines (VMs):
+---------------------------
+Software emulations of physical computers, complete with virtual hardware components like CPU, memory, and storage
+Components:
+=> Virtual CPU: Allocates processing power.
+=> Memory: Emulates physical RAM
+=> Storage: Virtual hard drives store data.
+VMs are created, managed, and run using hypervisors, providing an isolated environment for applications.
+
+6) What is cloud computing?
+----------------------------
+Delivery of computing services over the internet, allowing on-demand access to a shared pool of configurable resources.
+Enables users to access and use computing power, storage, and applications without needing local infrastructure.
+
+7) Benefits of cloud computing?
+-------------------------------
+=> Cost efficiency - Reduces the need for physical hardware and maintenance, lowering operational costs.
+=> Scalability - Easily scale resources up or down based on demand, adapting to changing needs.
+=> Accessibility - Access services and data from anywhere with an internet connection.
+=> Disaster recovery - Enhanced data backup and recovery options, ensuring business continuity.
+
+8) Common Cloud Provider:
+--------------------------
+=> AWS - Offers a broad set of global cloud-based products.
+=> Microsoft Azure - Provides a range of cloud services for analytics, storage, and more.
+=> Google Cloud Platform (GCP) - focuses on cloud computing, data storage, and machine learning
+
+9) Types of cloud services:
+----------------------------
+=> IaaS (infrastructure-as-a-service) - Provides virtualized computing resources over the internet (eg, AWS EC2, Microsoft Azure)
+=> PaaS (Platform-as-a-service) - Offers a platform for customers to develop, run, and manage applications without the complexity of building and maintaining infrastructure (eg: Google App Engine)
+=> SaaS (Software-as-a-service) - Delivers software applications over the internet on a subscription basis (eg: Google Workspace, Salesforce).
+
+10) Deployment Models:
+-----------------------
+=> Public cloud - Services offered over the public internet, available to anyone (eg: Azure, AWS)
+=> Private cloud - Exclusive cloud infrastructure for a single organization, providing more control and security.
+=> Hybrid cloud - Combines public and private clouds, allowing for data and applications to be shared between them.
+=> Multi-cloud - Use of multiple cloud services from different providers to meet specific business needs, optimizing flexibility and performance.
+
+11) Key concepts:
+------------------
+=> Virtualization - Technology that enables cloud computing by abstracting physical resources, allowing for better resource management.
+=> Elasticity - Ability to automatically scale resources to meet changing demands, ensuring efficiency.
+=> Resource pooling - Combining multiple physical resources to serve multiple consumers, enhancing efficiency and flexibility.
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Setting up my Homelab:
+======================
+A self-hosted virtualized environment used to safely practice offensive security techniques. All machines run as virtual machines (VMs) on your own hardware — no real systems are harmed.
+
+1) The lab simulates a real-world network with 3 zones:-
+------------------------------------------------------
+=> External zone - Attacker machines. Simulates the "outside" — the perspective of a hacker entering the network.
+=> DMZ Zone - Demilitarized zone. Public-facing servers (web, vulnerable Linux). Buffer between external and internal.
+=> Internal zone - Corporate LAN. Active Directory, servers, and client workstations are the most sensitive area.
+
+DMZ - A buffer zone between a private internal network and untrusted external networks (like the internet). It hosts public-facing services with restricted external access, while isolating them from the internal network. This limits direct exposure of the internal zone to external threats.
+
+2) Lab nodes - the 8 virtual machines:
+--------------------------------------
+a) External zone — attacker machines:-
+=> Kali Linux - Primary attacker machine. One of the most popular Linux distros for penetration testing. Preloaded with tools for scanning, exploiting, and analysing network vulnerabilities.
+=> Commando VM - Windows attacker machine. A Windows-based attack machine used for Windows-specific offensive tasks and tools.
+
+b) DMZ zone — intentionally vulnerable targets:-
+=> Metasploitable - Vulnerable Linux machine. An intentionally vulnerable Linux distro by Rapid7. Used to practice exploitation of known vulnerabilities and attack techniques.
+=> bWAPP - Vulnerable web server. A PHP-based vulnerable web app with 100+ vulnerabilities. Great for both basic and advanced web application attack practice.
+=> pfSense - Firewall (DMZ ↔ Internal). An open-source firewall and router sits between the DMZ and the internal network. Used to understand firewall rules, bypass techniques, and network segmentation
+
+c) Internal zone - corporate network:-
+=> Server 1 - Domain Controller — Windows Server 2019. Runs Active Directory + Certificate Services. Core of the internal network — manages identity, authentication, and group policy.
+=> Server 2 - IIS + SQL Server — Windows Server 2019. Runs Microsoft IIS (web server) and SQL. Used to practice web and database attacks in a Windows environment.
+=> 2x Clients - Windows 10 / 11 workstations. Joined the Active Directory domain. Used to practice lateral movement, privilege escalation, and Windows client exploitation.
+
+3) Hardware & Software pre-requisites:
+---------------------------------------
+=> RAM - 16 GB minimum — more is better for running multiple VMs simultaneously.
+=> Processor - 8-core CPU
+=> Disk space - 100 GB minimum
+=> Licences - Windows licence keys required. Windows Server 2019 has a 180-day trial.
+
+Downloads - all required files:-
+1) VirtualBox (or preferred virtualisation tool) — virtualbox.org/wiki/Downloads
+2) Kali Linux (pre-built VM download) — kali.org/get-kali/#kali-virtual-machines
+3) pfSense firewall — pfsense.org/download
+4) Ubuntu Desktop 24.04 LTS (for bWAPP web server) — ubuntu.com/download/desktop
+5) Metasploitable3 OVA file — https://www.dropbox.com/scl/fi/r71z1725hu3j84olhc2pm/Metasploitable3-win2k8.ova?rlkey=exl8p2v5t5a8fgb34bv5hiw06&e=2&dl=0
+6) Windows Server 2019 ISO — microsoft.com/evalcenter/download-windows-server-2019
+7) Windows 10 ISO — microsoft.com/software-download/windows10
+8) Windows 11 ISO — microsoft.com/software-download/windows11
+
+4) Network design - zones, traffic rules & diagrams:
+-----------------------------------------------------
+=> External-zone:
+Subnet: 172.16.10.0/24
+DHCP: Disabled (static IPs)
+
+=> DMZ-Zone:
+Subnet: 172.16.100.0/24
+DHCP: Disabled (static IPs)
+
+=> Internal-zone:
+Subnet: 172.16.200.0/24
+DHCP: Managed by Domain Controller
+
+Traffic flow rules per zone:-
+=> External zone machines: access physical network (updates) · communicate with DMZ · directly reach internal zone (lab exception).
+=> DMZ zone machines: access physical network · communicate with external zone · connect to internal zone.
+=> Internal zone machines: Domain Controller accesses physical network for updates · communicate with DMZ · connect directly to external zone.
+
+2 demo lab exceptions vs real-world:
+1. External and internal zones can reach each other directly, bypassing the DMZ — simplifies lab scenarios where full DMZ complexity isn't needed.
+2. All machines can reach the physical/host network for software updates. Warning: never do this with untrusted malware — always isolate those VMs from the host.
+
+Diagram 1 — normal segmented network (real-world reference):
+(Having issues with adding the diagram. Will add it soon)
+
+Diagram 2 — demo lab environment (with lab exceptions):
+(Having issues with adding the diagram. Will add it soon)
+
+The DMZ is the first line of defence. In a real pentest, compromising a DMZ machine (e.g. bWAPP or Metasploitable) is often the entry point for pivoting deeper into the internal network — exactly what this lab is designed to simulate.
+
+5) Network adapte assignments per machine:
+------------------------------------------
+Each VM needs multiple network adapters added in VirtualBox — one for each zone it must communicate with, plus a bridged adapter for host/physical network access.
+=> External zone machines:
+        -> Bridged — physical network access
+        -> DMZ Zone adapter
+        -> Internal Zone adapter
+=> DMZ zone machines:
+        -> Bridged — physical network access
+        -> External Zone adapter
+        -> Internal Zone adapter
+=> Internal zone machines:
+        -> Bridged — Domain Controller only (for updates)
+        -> DMZ Zone adapter
+        -> External Zone adapter
+
+Only the Domain Controller in the internal zone gets a bridged adapter. Other internal machines (IIS server, clients) do not have bridged access — they use DHCP from the Domain Controller instead.
+
+6) Full IP addressing scheme:
+------------------------------
+All machines use static IPs (DHCP disabled). Each machine has an adapter in every zone it communicates with, so it needs an IP in each of those subnets.
+
+Machine                                        External (10.x)                                        DMZ (100.x)                                        Internal (200.x)
+--------                                       ---------------                                        -----------                                        ----------------
+External zone machines
+-> Kali Linux                                  172.16.10.10/24                                       172.16.100.10/24                                    172.16.200.10/24
+-> Commando VM                                 172.16.10.20/24                                       172.16.100.20/24                                    172.16.200.20/24
+
+DMZ zone machines
+-> Metasploitable                              172.16.10.50/24                                       172.16.100.50/24                                    172.16.200.50/24
+-> bWAPP (web server)                          172.16.10.60/24                                       172.16.100.60/24                                    172.16.200.60/24
+-> pfSense firewall                            172.16.10.100/24                                      172.16.100.100/24                                   172.16.200.100/24
+
+Internal zone machines
+-> Domain Controller                           172.16.10.201/24                                      172.16.100.201/24                                   172.16.200.201/24
+-> IIS + SQL Server                            172.16.10.202/24                                      172.16.100.202/24                                   172.16.200.202/24
+-> Client 1                                    172.16.10.210/24                                      172.16.100.210/24                                   172.16.200.210/24
+-> Client 2                                    172.16.10.220/24                                      172.16.100.220/24                                   172.16.200.220/24
+
+7) Demo Lab setup order:
+------------------------
+(1) Create the virtual networks (3 NAT networks in VirtualBox)
+(2) Install all 8 OS systems — each with correct network adapter settings
+(3) Configure the pfSense firewall
+(4) Install additional tools on CommandoVM
+(5) Install Metasploitable3
+(6) Install and configure Active Directory + client workstations
+(7) Install Microsoft IIS and SQL Server
+(8) Make firewall exceptions for the demo lab
+Requirement for every machine before proceeding: fully up to date, and installed with the correct network adapter settings.
+
+8) Optional - Azure subscription & Oracle cloud attacker machine
+----------------------------------------------------------------
+Azure developer account - Lets you explore the Azure cloud environment, practice Azure-based attacks, and connect on-premises Active Directory to Azure Entra ID. Free developer account: developer.microsoft.com/en-us/microsoft-365/dev-program
+-> Duration - Valid for 90 days
+-> Includes - 25 E5 licences + optional instant sandbox
+-> Limitation - Development and testing only — not production. One account per Microsoft Live account.
+
+Cloud-based attacker machine (Oracle Cloud — free tier):-
+Instead of hosting Kali locally, you can use a free cloud-based VM as your attacker. It must reach your DMZ machines via custom firewall rules and port forwarding in your lab. Also useful in real-world pentests. Sign up at: cloud.oracle.com
+
+Cost warning: Always use free-tier resources only on all cloud platforms (Azure, Oracle Cloud). Set up a budget cost alert to avoid unexpected charges. No paid services are required for this course.
+
+X----------------------X---------------------------------X-------------------------------X------------------------------------X------------------------------------------X---------------------------------------X-----------------------------------------X-----------------------------------X
