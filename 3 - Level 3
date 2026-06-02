@@ -1,0 +1,185 @@
+Basic Hacking Tools:
+====================
+Reconnaissance phase:
+---------------------
+        Involves gathering information about a target (individual, organization, or network) to identify potential vulnerabilities and determine the best approach for an attack.
+        It is the first step in the hacking lifecycle and is often known as Information Gathering.
+
+Passive Reconnaissance vs Active Reconnaissance:-
+-------------------------------------------------
+Passive Reconnaissance:
+=> Gathering publicly available information without interacting directly with the target
+=> Examples: WHOIS lookups, searching company websites, social media, or public forums, Analyzing DNS records and metadata from public documents.
+
+Active Reconnaissance:
+=> Direct interaction with the target's systems to gather information.
+=> Examples: Scanning networks and ports, DNS queries, Enumerating services and users.
+
+Purpose of Active Reconnaissance:
+----------------------------------
+=> Gather precise and actionable data about a target system or network.
+=> Identify potential entry points and vulnerabilities to inform further phases like exploitation.
+=> Move from general knowledge (Passive reconnaissance) to specific technical insights.
+=> Helps identify live hosts, services, open ports, and configurations.
+=> Informs the tools and methods to use in later phases.
+=> Reduces unnecessary scanning by focusing on known target characteristics.
+
+Direct interaction with the target provides real-time, accurate information, enables strategy refinement for subsequent attack phases, and lays the foundation for discovering exploitable vulnerabilities.
+
+Reconnaissance (active & passive) is considered cyclic because it involves an iterative process of gathering, analyzing, and refining information to develop a comprehensive understanding of the target system 
+
+Note: Active reconnaissance can alert the target to your presence. Always assess the risk of detection before employing these techniques.
+
+Active DNS enumeration tools:
+------------------------------
+Focuses on identifying and analyzing the Domain Name System (DNS) records and infrastructure of a target organization.
+Actively querying DNS reveals:-
+=> Hostnames (eg: mail.example.com, vpn.example.com)
+=> Associated IP address
+=> Subdomains, which may expose staging environments, admin panels, or other sensitive services.
+
+DNS misconfigurations can expose critical information, such as:
+=> Internal records mistakenly exposed to the public
+=> Misaligned or outdated records pointing to decommissioned infrastructure.
+=> Unprotected subdomains vulnerable to takeover.
+
+Each DNS record potentially points to a service or system that can be exploited. For example:
+=> An MX (Mail Exchange) record might lead to an email server.
+=> A TXT record might reveal SPF, DKIM, or DMARC configurations useful for phishing.
+
+DNS information can aid in launching targeted attacks:-
+=> Crafting phishing campaigns using valid subdomains
+=> Identifying exploitable vulnerabilities in specific services.
+DNS records like SRV (Service) or CNAME (Canonical Name) provide insights into backend systems and configurations.
+
+Subdomains:
+-----------
+=> Subdivisions of a primary domain.
+=> Represent distinct sections of a website or service under the same domain. Examples: blog.example.com, admin.example.com
+=> Serve different functionalities like organizing content/services (eg: public website vs internal admin portal)
+
+Virtual Hosts (VHOSTS):
+-----------------------
+=> Allows multiple websites or services to run on the same server, distinguished by their domain or IP address. Example: example.com, anotherexample.com
+=> Types of VHOSTS: Name-Based VHOSTS - Distinguish sites by domain name; IP-Based VHOSTS - Use separate IPs for each site.
+
+Importance of subdomains:
+--------------------------
+=> Reconnaissance:
+   -> Discover hidden services (admin, dev, staging)
+   -> Identify less-secured environments (eg: forgotten test subdomains)
+=> Attack Surface Expansion:
+   -> Each subdomain may run distinct software, increasing attack opportunities.
+   -> Example: An outdated CMS on blog.example.com
+=> Discovery tools: Tools like Amass and Fierce can enumerate subdomains
+
+Importance of VHOSTS:
+---------------------
+=> Discovering Hidden VHOSTS:
+    -> Some servers host services not listed in DNS, accessible only via Host header manipulation.
+    -> Example: Host: secret.example.com reveals a hidden service
+=> Exploiting misconfigurations: 
+    -> Poorly secured VHOSTS might expose sensitive data.
+    -> Example: An admin panel on a forgotten VHOST.
+=> Discovery tools: Burp Suite, Gobuster, or custom scripts with header-based fuzzing.
+Discovering VHOST is more difficult than subdomains and usually needs to be brute-forced.
+
+ASN Numbers:
+------------
+Autonomous System Number (ASN) is a unique identifier assigned to an Autonomous System (AS), which is a group of IP networks managed by a single organization, such as an ISP or enterprise.
+Enables different networks to exchange routing information on the global internet via BGP (Border Gateway Protocol)
+
+Working of ASN:
+---------------
+Autonomous Systems (AS) are responsible for routing traffic.
+
+Role of ASN in Routing:
+=> ASN identifies the AS during internet traffic exchanges.
+=> Helps BGP determine the best path for data.
+
+Types of ASN:
+=> Public ASN: For networks interacting with the internet.
+=> Private ASN: For internal routing, not visible on the internet.
+
+Example: Traffic from your device to a website crosses multiple ASes, each identified by its ASN.
+
+DNS Zone Transfers:
+-------------------
+Mechanism used to replicate the data from one DNS server to another, typically from a primary (master) DNS server to a secondary (slave) DNS server. It ensures redundancy and consistency of DNS records within a network.
+
+Types of Zone transfers:
+=> Full Zone Transfer (AXFR): Transfers the entire DNS zone.
+=> Incremental Zone Transfer (IXFR): Transfers only the changes since the last update, making it more efficient.
+
+Data contained in a zone transfer:
+=> A list of subdomains
+=> Associated IP addresses (A/AAAA records)
+=> Mail server records (MX records)
+=> Other DNS configurations.
+
+A successful DNS zone transfer can reveal sensitive information about a target's infrastructure, including:
+=> Internal server names
+=> Subdomains not meant to be public
+=> Mail servers, potentially useful for phishing
+=> Connections between systems.
+=> This can act as a blueprint of the target's network.
+
+DNS Querying Tools:
+--------------------
+=> nslookup:
+   -> Basic DNS querying tool to query specific DNS record types (eg: A, MX, TXT)
+   -> Available in Windows and Linux
+   -> Used for finding Subdomains, new domains, IP addresses & IT infrastructure assets
+   -> Example: nslookup -type=TXT example.com
+
+=> host:
+    -> Basic DNS querying tool to query specific DNS record types (eg: A, MX, TXT) (Has many similarities with the nslookup tool)
+    -> Available in Linux
+    -> Used for finding Subdomains, new domains, IP addresses & IT infrastructure assets.
+    -> Example: host -t TXT example.com
+    -> Note: We can use these commands to create a script that enumerates subdomains based on a specific input list of potential subdomains:
+                          for ip in $(cat subbrute.txt); do host $ip.example.com; done
+Wordlist for enumerating subdomains: https://github.com/theMiddleBlue/DNSenum/blob/master/wordlist/subdomains-top1mil-20000.txt
+
+=> dig:
+     -> Performs detailed DNS lookups and traces DNS paths.
+     -> Available in Windows and Linux
+     -> Used for finding Subdomains, new domains, IP addresses & IT infrastructure assets.
+     -> Example: dig example.com ANY
+
+=> dnsenum:
+      -> Automates DNS enumeration for subdomains and records.
+      -> Available in Windows and Linux
+      -> Used for finding Subdomains, new domains, IP addresses, Zone transfers & IT infrastructure assets.
+      -> Example: dnsenum example.com
+
+=> fierce:
+      -> DNS Reconnaissance focused on subdomain enumeration and detecting DNS misconfigurations
+      -> Available in Windows and Linux
+      -> Used for finding Subdomains, new domains, IP addresses & IT infrastructure assets.
+      -> Example: fierce --domain example.com
+
+=> aiodnsbrute:
+      -> DNS reconnaissance focused on subdomain enumeration with built-in lists and fast results on the CLI. URL:https://github.com/blark/aiodnsbrute
+      -> Available in Windows and Linux
+      -> Used for finding subdomains and new domains
+      -> Example: aiodnsbrute example.com
+
+=> amass:
+      -> Comprehensive tool for passive and active DNS enumeration.
+      -> Available in Windows and Linux
+      -> Used for enumerating subdomains using multiple sources, including brute-forcing.
+      -> Example (subdomain enum): amass enum -d example.com
+
+Note 1: You can also check all SSL certificates returned by the company's endpoint. Certificates usually contain interesting domain names.
+Note 2: Always perform DNS enumeration from a VPS (Virtual Private Server / Hosted Server) or with a VPN. This will increase speed and avoid getting flagged or blocked.
+
+VHOSTS enumeration:
+--------------------
+Brute-forcing VHOSTS in environments where virtual hosting is being used.
+
+=> Gobuster:
+gobuster vhost --useragent "Mozilla/5.0 (x11; Linux x86_64; rv:128.0) Gecko/20100101 firefox/128.0" --wordlist "/usr/share/wordlists/SecLists/Discovery/DNS/namelist.txt" --url example.com
+
+=> ffuf:
+ffuf -H "Host: FUZZ.example.com" -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 firefox/128.0" -c -w "/usr/share/wordlists/SecLists/Discovery/DNS/namelist.txt" -u example.com
