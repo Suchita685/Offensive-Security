@@ -1,5 +1,6 @@
 Basic Hacking Tools:
-====================
+---------------------
+----------------------
 Reconnaissance phase:
 ---------------------
         Involves gathering information about a target (individual, organization, or network) to identify potential vulnerabilities and determine the best approach for an attack.
@@ -31,7 +32,7 @@ Reconnaissance (active & passive) is considered cyclic because it involves an it
 Note: Active reconnaissance can alert the target to your presence. Always assess the risk of detection before employing these techniques.
 
 Active DNS enumeration tools:
-------------------------------
+==============================
 Focuses on identifying and analyzing the Domain Name System (DNS) records and infrastructure of a target organization.
 Actively querying DNS reveals:-
 => Hostnames (eg: mail.example.com, vpn.example.com)
@@ -183,3 +184,140 @@ gobuster vhost --useragent "Mozilla/5.0 (x11; Linux x86_64; rv:128.0) Gecko/2010
 
 => ffuf:
 ffuf -H "Host: FUZZ.example.com" -H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 firefox/128.0" -c -w "/usr/share/wordlists/SecLists/Discovery/DNS/namelist.txt" -u example.com
+
+Port / Service enumeration tools:
+==================================
+=> Ports are logical endpoints used for communication between devices on a network. They allow multiple services to run on the same machine by assigning each service a unique identifier.
+=> Port numbers: Range from 0-65535, divided into:
+        -> 0-1023: Well-known ports - Standardized for specific services (eg: HTTP on port 80, SSH on port 22)
+        -> 1024-49151: Registered ports - For user applications or custom services.
+        -> 49152-65535: Dynamic/Private ports - Temporary ports for client-side communication.
+Example: When visiting example.com, your browser connects to port 80 (HTTP) or 443 (HTTPS).
+=> Ports help in:
+        -> Service discovery - identifying open ports reveals available services (eg: SSH, RDP, HTTP)
+        -> Attack surface expansion - Each service represents a potential entry point for attacks (eg: brute-forcing SSH or exploiting vulnerable web servers)
+
+Port discovery tools:
+--------------------
+=> Nmap:
+-------
+-> Nmap (Network Mapper) - open source tool for network discovery and security auditing, designed to scan large networks efficiently and identify open ports, services, and vulnerabilities.
+
+Key features:-
+-> Port scanning - identifies open ports on target systems
+-> Service detection - Determines services running on open ports (eg: HTTP, FTP)
+-> OS Detection - Attempts to identify the operating system of the target.
+-> Scriptable - Uses NSE (Nmap Scripting Engine) for vulnerability detection and automation
+
+Basic Nmap scan:-
+-> nmap 192.168.1.1
+        => It's called a "CONNECT" scan. Testing only the 1000 most-used TCP ports.
+
+Running a "SYN" scan:-
+-> The normal "CONNECT" scan uses the full 3-way handshake to test the port. A port is marked as "open" when the 3-way handshake is successful, and Nmap receives a "SYN-ACK."
+-> The normal "CONNECT" can be easily identified and is blocked by some firewalls. A variant that is a little bit more stealthy and faster is the "SYN" scan.
+-> We call this a "half-open scan" because the 3-way handshake does not complete.
+-> To run the test, a client sends a SYN to start the 3-way handshake.
+-> When the target responds with "SYN-ACK" something is listening, and the port is marked as "open". After this, the connection is closed, and the 3-way handshake is not completed.
+-> To use this option Nmap needs to use "Raw Sockets" which requires "root" privileges.
+-> When Nmap is run as root a SYN scan is the default scan!
+              $  sudo nmap 192.168.1.1
+
+Services usually found these known ports:-
+21 - FTP, 22 - SSH, 25 - SMTP, 88 - Kerberos, 161/162 - SNMP, 389/636 - LDAP(S), 443 - HTTPS, 445 - SMB, 3306 - MySQL, 3389 - RDP, 5900 - VNC
+
+Nmap variants besides "CONNECT" and "SYN":-
+=> -sT: Default scan (when not using sudo). The "CONNECT" scan, which works by performing a full 3-way handshake.
+=> -sS: Default scan (when using sudo), the TCP-SYN scan / Half-Open scan.
+=> -sA: TCP-ACK scan. Sends only an ACK packet to the target port in the hope of receiving an RST in return (used for firewall testing).
+=> -sX: XMAS scan. This scan is very noisy and tests all TCP flags (FIN/ PSH/ URG). 
+=> -sU: UDP scan. This scan also requires "raw sockets" and needs to be run with sudo privileges
+                sudo nmap -sU 192.168.1.1
+
+Chaining IP addresses and ports:-
+=> Use commas to separate individual values
+        sudo nmap 192.168.1.1, 192.168.1.2, 192.168.1.3
+=> Use a dash (-) to specify a range (eg: from 1 to 4)
+        sudo nmap 192.168.1.1-3
+=> Use a slash (/) after an IP address to define a subnet range
+        sudo nmap 192.168.1.1/24
+
+Important arguments of Nmap:-
+=> -h: help
+=> -v: Verbose mode (use -vv or -vvv for increased verbosity)
+=> -sV: Enumerate versions (banner grabbing)
+=> -sC: Script scan. Use the default scripts on open ports to identify vulnerabilities and gather other interesting information.
+=> -p: Specify port(s). -p- scans all 65535 ports 
+=> -Pn: No-Ping scan. Skips the ping step to determine if the host is live.
+=> -O: OS detection. Identifies the target OS
+=> -sL: List scan (ping scan). Lists available hosts.
+=> -oA: Outputs the results in all supported formats (-oG = Greppable | -oN = Nmap | -oX = XML)
+=> -iL: Input List. Specify an input list containing multiple hosts to scan.
+
+Some examples:-
+=> Scan all 65535 TCP ports of 2 hosts with a SYN scan:
+        sudo nmap -p- 192.168.1.1, 192.168.1.2
+=> Scan all 65535 UDP ports of 2 hosts:
+        sudo -sU nmap -p- 192.168.1.1-2
+=> Scan all 65535 TCP ports with a CONNECT scan and retrieve the hosts to scan from an input list and output all the results:
+        nmap -p- -iL ~/Desktop/hosts.txt -oA ~/Desktop/nmap-results.txt
+=> Most used scan:
+        sudo nmap -sC -sV -p- 192.168.1.1 -oA ~/Desktop/nmap-192-168-1-1
+
+SYN scan - Script scan - Version scan - All ports
+For stealth, we can first scan live hosts and then perform a SYN scan, and we disable pinging all the devices first. Scan only the 100 most used ports:
+        nmap -sL 192.168.1.1/24
+        sudo nmap -sS -Pn -F -iL ~/Desktop/alive-hosts.txt
+
+Note: When evading a blue team, consider using the CONNECT scan (-sT) because this blends in with normal traffic
+Nmap's "top ports" are specified in the /usr/share/nmap/nmap-services file. The third column in this file represents the frequency at which these ports are found to be open. We can modify Nmap's top ports by adjusting this value.
+
+When you need a fast overview of all web ports, perform the following:-
+1) Perform a web scan and output at least the XML
+        sudo nmap -p 80,443,4443,8000,8080,8443 192.168.1.1 -oA web-results
+2) Install the Google Chrome or Chromium browser
+3) Download the latest release of Aquatone:
+        https://github.com/michenriksen/aquatone/releases/tag/v1.7.0
+4) Run the tool to screenshot the nmap results:
+        cat ~/Desktop/web-results.xml | ./aquatone -nmap -out capture
+5) Check the resulting screenshots in the Aquatone folder (/capture/screenshots)
+
+Another Screenshot tool is Eyewitness: (https://github.com/RedSiege/EyeWitness)
+1) Download Eyewitness:
+        git clone https://github.com/RedSiege/EyeWitness.git 
+2) Run setup.sh script in the "/Python/setup" directory of EyeWitness:
+        pip3 install –r requirements.txt
+        sudo./setup.sh
+3) Now run the tool on the Nmap output:
+        ./EyeWitness.py -x ~/Desktop/web-results.xml --web -d ./eyewitness_report
+
+Nmap NSE Scripts: 
+-> The Nmap Scripting Engine (NSE) allows Nmap to go beyond port scanning by performing advanced tasks using customizable scripts.
+-> Written in Lua, these scripts can automate a wide variety of network reconnaissance and vulnerability assessment tasks. Script location: /usr/share/nmap/scripts
+Key features:
+• Detect vulnerabilities, misconfigurations, and weak credentials.
+• Gather additional target information, such as service banners or detailed software versions.
+• Perform brute force attacks, exploit tests, or even malware detection.
+• NSE scripts are organized into categories, such as: discovery (e.g., dns-brute, ssh
+hostkey), vulnerability (e.g., http-vuln-cve2017-5638), brute (e.g., ftp-brute, ssh-brute) 
+and exploit (e.g., ms17-010).
+
+Examples:
+=> Scan with a specific NSE script:
+        nmap--script=http-title 192.168.1.1
+=> Scan with 2 NSE scripts:
+        nmap --script=http-title,dns-zone-transfer 192.168.1.1
+=> Scan based on category (all SMB scripts):
+        nmap--script=smb-* 192.168.1.1
+=> Pass additional parameters to scripts using the --script-args option.
+        nmap--script=ftp-anon --script-args anonmax=10 192.168.1.1
+
+Nmap Alternatives:
+-------------------
+• Alternatives to Nmap include MASSCAN and RustScan.
+• These alternatives are faster because they send much more simultaneous traffic. However, they also generate more traffic and are noisier than Nmap!
+• When we are on a Windows host, we can also scan for open ports. For example, we can use PowerShell’s "Test-NetConnection":
+        Test-NetConnection-Port 445 192.168.1.1
+• We can also use Powershell scripting to create a fully functional PowerShell port scanner:
+1..1024 | % {echo ((New-Object Net.Sockets.TcpClient).Connect("192.168.1.1", $_)) "TCP port $_ is open"} 2>$null
+
