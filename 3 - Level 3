@@ -318,6 +318,174 @@ Nmap Alternatives:
 • These alternatives are faster because they send much more simultaneous traffic. However, they also generate more traffic and are noisier than Nmap!
 • When we are on a Windows host, we can also scan for open ports. For example, we can use PowerShell’s "Test-NetConnection":
         Test-NetConnection-Port 445 192.168.1.1
-• We can also use Powershell scripting to create a fully functional PowerShell port scanner:
+• We can also use PowerShell scripting to create a fully functional PowerShell port scanner:
 1..1024 | % {echo ((New-Object Net.Sockets.TcpClient).Connect("192.168.1.1", $_)) "TCP port $_ is open"} 2>$null
 
+=> NetCat:
+-----------
+• NetCatis a command-line network tool used for network connectivity and data transfers.
+• NetCatprovides the ability to create TCP and UDP connections, and also supports other protocols such 
+as HTTP, SSL, and more.
+• NetCat can be used for testing network connections, sending and receiving data, and performing 
+network diagnostics.
+• NetCatoffers a wide range of options and functionalities, including port scanning, port forwarding, 
+banner grabbing, and redirecting network traffic.
+• NetCatis frequently used by security researchers and penetration testers to identify and exploit 
+vulnerabilities in networks and applications.
+• NetCat(netcat / nc) and NCat (ncat) are two network tools that have many similarities. We work with 
+the default NetCat library. NCat adds extra features on top of NetCat's functionality, such as support for 
+SSL encryption, proxy connections, banner grabbing, IPv6, and more. NCat is developed by the same 
+creators of Nmap and is therefore also part of the Nmap suite.
+
+Important Arguments:-
+-h: Help
+-v: Verbose mode: Provides detailed output on NetCat's activities. Used for debugging (vv for extra verbosity)
+-l: Listen mode. This allows NetCat to listen for incoming connections on a specified port.
+-p: Port specification: Allows you to specify the port to listen to or connect to.
+-k: Keep connection open: This flag keeps the connection open after input ends (interactive connection)
+-e: Execute program: This allows you to run a program on the host when a connection is made.
+-u: UDP mode: Switches to UDP mode for sending and receiving UDP packets instead of TCP.
+-c: Command-line: Allows you to give NetCat commands via the command line.
+-z: Zero I/O mode: Sends no data but only establishes the connection. This flag is used for port scanning.
+-n: NoDNS: Do not attempt to resolve hostnames to IP addresses.
+-w: Timeout: Specifies after how many seconds the connection will "time out" and the application will continue.
+
+For executing a portscan, we can use the following NetCat command:
+        nc -nvv -w 1 -z 192.168.1.1 3388-3390
+nc: NetCat binary
+-n: NoDNS
+-vv: Double verbose
+-w 1: 1 second timeout
+-z: Port scanning argument
+192.168.1.1: The host
+3388-3390: The 3 ports to scan.
+
+Uploading & Downloading Files:
+When both the client and the server have NetCat installed, they can exchange files between each other 
+(commonly used for data exfiltration).
+• The sending side transmits the file.
+• The listening side receives the binary data and writes it to a file.
+
+Receiving Side / Listening Side:
+-l: Listen mode
+-p 8888: Listen on port 8888
+> file.txt: Write all received data into file.txt
+nc -l -p 8888 > file.txt
+
+Sending Side:
+-q: Stop after EOF on stdin and a 5-second delay
+10.10.10.10: The IP address of the receiving side
+8888: The port number the receiving side is listening on
+< data.txt: The file that will be sent
+nc -q 5 10.10.10.10 8888 < data.txt
+
+Opening a listener for a Reverse Shell:
+nc -lnvp 8888
+-l: Listen mode
+-n: No DNS
+-v: Verbose mode
+-p: Port number on which to listen for incoming traffic
+
+=> RPC Specific Tools:
+======================
+A Remote Procedure Call (RPC) allows a program to execute a procedure (subroutine) on a different machine as if it were a local call.
+
+Key Idea:
+RPC abstracts the communication between two systems, making the remote procedure look like a local procedure call. 
+RPC is usually language-independent, meaning that client and server software can be written in different programming languages.
+
+Purpose:
+RPC enables distributed systems to communicate seamlessly over networks, commonly used in client-server models.
+
+Port assignment:
+By default, RPC uses ports in the ephemeral port range (1024-5000) when it assigns ports to RPC applications that have to listen on a TCP endpoint. 
+This behavior can make restricting access to these ports challenging for network administrators.
+
+Types of RPC:-
+=> XMP-RPC: Uses XML to encode the request and HTTP as a transport mechanism.
+=> JSON-RPC: Similar to XML-RPC but uses JSON for encoding and is typically over HTTP or WebSockets.
+=> gRPC: Developed by Google, uses Protocol Buffers, faster and more efficient than older RPC systems.
+=> DCOM (Distributed Component Object Model): Windows-based RPC mechanism for inter-process communication in distributed applications.
+
+Common Vulnerabilities in RPC:
+Retrieving sensitive data: Insufficient input sanitization can lead to remote code execution (RCE).
+Buffer Overflow: Malicious input can cause buffer overflows in RPC-based applications, leading to arbitrary code execution.
+Authentication Weaknesses: Insecure RPC implementations may allow attackers to bypass authentication, gaining unauthorized access.
+Denial of Service (DoS): Attackers can flood RPC services with requests, overwhelming the server.
+Man-in-the-Middle (MITM) Attacks: Lack of encryption in RPC can expose sensitive data or allow malicious interception.
+
+rpcclient tool:
+Usage: rpcclient is a tool in the Samba suite that can be used to interact with Windows-based RPC services.
+Purpose: It can be used to list shares, enumerate users, and access sensitive file system information on Windows systems.
+
+=> Connecting with rpcclient:
+        rpcclient -U Administrator%Welcome01 192.168.1.1
+
+=> Connect with domain credentials:
+        rpcclient-U DOMAIN/Administrator%Welcome01 192.168.1.1
+
+=> Connect with domain credentials and ask for a password (anonymous):
+        rpcclient-U DOMAIN/Administrator -N 192.168.1.1
+
+=> Connect to a specific port:
+        rpcclient-U DOMAIN/Administrator%Welcome01 -p 40001 192.168.1.1
+
+rpcclient supports many authentication methods, like Kerberos and NT hashes
+
+Once connected, we receive an RPC shell. Depending on our rights, we can query the system.
+=> Domain information: querydominfo
+=> Domain users: enumdomusers
+=> Specific user enumeration: queryuser <username>
+=> Enumerate shares: netshareenumall
+
+=> NetBIOS-specific tools:
+===========================
+NetBIOS (Network Basic Input/Output System) is a networking protocol that allows applications on different computers to communicate over a local area network (LAN).
+Introduced by IBM in 1983, later adapted by Microsoft.
+Purpose: Provides services related to name resolution, session establishment, and data transport over a network.
+
+Key Components of NetBIOS:
+NetBIOS Name Service (NBNS): Resolves NetBIOS names to IP addresses (like DNS for NetBIOS).
+NetBIOS Datagram Service: Provides connectionless communication for broadcasting messages.
+NetBIOS Session Service: Establishes and manages reliable, connection-oriented communication between nodes.
+
+NetBIOS often works over port 137 (UDP), 138 (UDP), and 139 (TCP).
+
+Why NetBIOS is Vulnerable:-
+Lack of Encryption: Communication via NetBIOS is often unencrypted, making it easy to intercept.
+Open Ports: NetBIOS commonly runs on exposed ports (137-139).
+Broadcast Nature: NetBIOS datagrams can be broadcast, potentially leaking sensitive information.
+Weak Authentication: Older implementations lack robust authentication mechanisms.
+Overexposure on the Internet: Misconfigured NetBIOS can expose internal networks to external threats.
+
+NetBIOS Exploitation Tools:
+=> Nmap - NetBIOS Enumeration:
+Usage: Identify NetBIOS services and open ports.
+Purpose: Discovers NetBIOS names and possible vulnerabilities.
+Example:
+nmap -p 139 --script nbstat <target_ip>
+
+=> NBTScan- NetBIOS Name Scanning:
+Usage: Scan for NetBIOS names, MAC addresses, and workgroups.
+Purpose: Enumerates NetBIOS names and exposed resources.
+Example:
+sudo nbtscan -r 192.168.1.1
+
+=> Metasploit - Exploitation Framework:
+Usage: Exploit SMB vulnerabilities and misconfigured shares over NetBIOS.
+Purpose: Automates attacks like credential harvesting and service enumeration.
+Example:
+use auxiliary/scanner/netbios/nbname
+
+=> Responder - Man-in-the-Middle Attacks:
+Usage: Poison NetBIOS Name Service (NBNS) requests to capture credentials.
+Purpose: Intercepts and manipulates NetBIOS traffic.
+Example:
+sudo responder -I <interface>
+
+=> nbtstat- NetBIOS Diagnostic Tool:
+Usage: A built-in Windows tool for diagnosing and enumerating NetBIOS over TCP/IP.
+Purpose: Identify active NetBIOS sessions and enumerate workgroups, usernames, and 
+potential targets for exploitation.
+Example:
+nbtstat-A <hostname>
